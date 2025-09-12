@@ -6,7 +6,7 @@
 /*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/12 16:01:27 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/09/12 16:04:40 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,10 @@ int	main(int argc, char **argv, char **envp)
 		if (rl != NULL && *rl)
 			add_history(rl);
 		rl = NULL;
+		if (g_signal == SIGINT)
+			
+		else if (g_signal == SIGQUIT)
+		
 	}
 	return (0);
 }
