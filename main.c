@@ -6,18 +6,17 @@
 /*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/12 16:04:40 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/09/12 16:53:13 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <readline/history.h>
-#include <readline/readline.h>
-#include <stdio.h>
+#include "miniShell.h"
 
-int	main(int argc, char **argv, char **envp)
+int	main(void)
 {
 	char	*rl;
 
+	signal_setup();
 	while (1)
 	{
 		rl = readline("miniShell$> ");
@@ -25,9 +24,14 @@ int	main(int argc, char **argv, char **envp)
 			add_history(rl);
 		rl = NULL;
 		if (g_signal == SIGINT)
-			
-		else if (g_signal == SIGQUIT)
-		
+		{
+			rl_replace_line("", 0);
+			rl_on_new_line();
+			write(1, "\n", 1);
+			rl_redisplay();
+			g_signal = 0;
+		}
+		//else if (g_signal == SIGQUIT)
 	}
 	return (0);
 }

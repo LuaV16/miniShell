@@ -6,11 +6,11 @@
 /*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 15:39:00 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/12 16:08:40 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/09/12 16:33:11 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-
+#include "miniShell.h"
 
 volatile sig_atomic_t g_signal = 0;
 
