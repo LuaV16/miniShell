@@ -1,0 +1,10 @@
+{
+	"files.associations": {
+		"stdio.h": "c",
+		"minishell.h": "c",
+		"limits.h": "c",
+		"unistd.h": "c",
+		"history.h": "c",
+		"fcntl.h": "c"
+	}
+}

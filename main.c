@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/12 16:53:13 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/09/14 13:49:39 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,22 @@
 int	main(void)
 {
 	char	*rl;
-
+	char	**tokenized;
+	//int		index;
+	
 	signal_setup();
 	while (1)
 	{
 		rl = readline("miniShell$> ");
 		if (rl != NULL && *rl)
-			add_history(rl);
+		add_history(rl);
+		tokenized = ft_token(rl);
+		/*index = 0;
+		while (tokenized[index])
+		{
+			printf("%s\n", tokenized[index]);
+			index++;
+		}*/
 		rl = NULL;
 		if (g_signal == SIGINT)
 		{
