@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/14 13:28:17 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/15 09:43:47 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,11 @@
 # include <fcntl.h>
 # include "libft.h"
 # include <sys/types.h>
+#include <errno.h>
 
 extern volatile sig_atomic_t g_signal;
 
 void signal_setup(void);
 char **ft_token(char *rl);
+void	null_content(char c, char quote);
+void	close_quotes(char c);

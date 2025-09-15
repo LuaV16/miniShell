@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/14 13:49:39 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/15 10:31:19 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,12 +25,12 @@ int	main(void)
 		if (rl != NULL && *rl)
 		add_history(rl);
 		tokenized = ft_token(rl);
-		/*index = 0;
+		/* index = 0;
 		while (tokenized[index])
 		{
 			printf("%s\n", tokenized[index]);
 			index++;
-		}*/
+		} */
 		rl = NULL;
 		if (g_signal == SIGINT)
 		{
