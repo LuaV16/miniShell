@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 10:15:38 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/15 10:46:00 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/15 14:06:15 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,43 +19,69 @@ int	is_space(char c)
 	return (0);
 }
 
-void	quotes_count(char *rl, int *index, char *quote)
+int	is_special_char(char c)
 {
+	if (c == '>' || c == '<' || c == '|')
+		return (1);
+	return (0);
+}
+
+int	quotes_count(char *rl, int *index, int *count)
+{
+	char	quote;
+
 	if (rl[*index] == '"' || rl[*index] == '\'')
 	{
-		*quote = rl[*index];
-		null_content(rl[*index + 1], *quote);
+		quote = rl[(*index)++];
+		null_content(rl[*index + 1], quote);
 		close_quotes(rl[*index + 1]);
-		(*index)++;
-		while (rl[*index] && rl[*index] != *quote)
-		{
-			if (is_space(rl[*index]))
-				(*index)++;
-			close_quotes(rl[*index + 1]);
+		while (rl[*index] && rl[*index] != quote)
 			(*index)++;
-		}
+		if (rl[*index] == quote)
+			(*index)++;
+		(*count)++;
+		return (1);
 	}
+	return (0);
+}
+
+int	special_char_counts(char *rl, int *index, int *count)
+{
+	if (is_special_char(rl[*index]))
+	{
+		while (rl[*index] && is_special_char(rl[*index])
+			&& rl[*index] == rl[(*index) + 1])
+			(*index)++;
+		(*index)++;
+		(*count)++;
+		return (1);
+	}
+	return (0);
 }
 
 int	count_words(char *rl)
 {
-	int		index;
-	int		count;
-	char	quote;
+	int	index;
+	int	count;
 
 	index = 0;
 	count = 0;
-	if (!rl)
-		return (0);
-	while (rl[index])
+	while (rl && rl[index])
 	{
-		if (is_space(rl[index]) && !(is_space(rl[index + 1])
-				&& rl[index + 1] != '\0'))
+		while (rl[index] && is_space(rl[index]))
+			index++;
+		if (!rl[index])
+			break ;
+		if (!quotes_count(rl, &index, &count) && !special_char_counts(rl,
+				&index, &count))
+		{
+			while (rl[index] && !is_space(rl[index]) && rl[index] != '"'
+				&& rl[index] != '\'' && !is_special_char(rl[index]))
+				index++;
 			count++;
-		quotes_count(rl, &index, &quote);
-		index++;
+		}
 	}
-	return (count + 1);
+	return (count);
 }
 
 int	fill_quotes(char *rl, int *i, char **res, int *j)
@@ -77,6 +103,22 @@ int	fill_quotes(char *rl, int *i, char **res, int *j)
 	return (0);
 }
 
+int	fill_special_chars(char *rl, int *i, char **res, int *j)
+{
+	int	start;
+
+	if (is_special_char(rl[*i]))
+	{
+		start = *i;
+		while (rl[*i] && is_special_char(rl[*i]) && rl[*i] == rl[(*i) + 1])
+			(*i)++;
+		(*i)++;
+		res[(*j)++] = ft_substr(rl, start, *i - start);
+		return (1);
+	}
+	return (0);
+}
+
 int	fill_result(char *rl, char **res)
 {
 	int	i;
@@ -91,10 +133,12 @@ int	fill_result(char *rl, char **res)
 			i++;
 		if (!rl[i])
 			break ;
-		if (!fill_quotes(rl, &i, res, &j))
+		if (!fill_quotes(rl, &i, res, &j) && !fill_special_chars(rl, &i, res,
+				&j))
 		{
 			start = i;
-			while (rl[i] && !is_space(rl[i]) && rl[i] != '"' && rl[i] != '\'')
+			while (rl[i] && !is_space(rl[i]) && rl[i] != '"' && rl[i] != '\''
+				&& !is_special_char(rl[i]))
 				i++;
 			res[j++] = ft_substr(rl, start, i - start);
 		}
