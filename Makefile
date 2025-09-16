@@ -2,7 +2,7 @@ NAME=miniShell
 CC=cc
 CFLAGS=-Wall -Wextra -Werror -Ilibft -g -fsanitize=address
 LDCFLAGS=-lreadline
-SRCS=main.c signals.c tokens/tokens.c tokens/token_errors.c
+SRCS=main.c signals.c tokens/tokens.c tokens/token_errors.c tokens/add_to_struct.c
 OBJS=$(SRCS:.c=.o)
 LIBFT_DIR=libft
 LIBFT=$(LIBFT_DIR)/libft.a

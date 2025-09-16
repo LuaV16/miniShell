@@ -6,17 +6,36 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/15 14:06:45 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/16 17:25:47 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "miniShell.h"
 
+void	print_cmds(t_cmd *cmds)
+{
+    int i;
+    while (cmds)
+    {
+        printf("Comando: %s\n", cmds->command);
+        printf("Args: ");
+        for (i = 0; cmds->args && cmds->args[i]; i++)
+            printf("[%s] ", cmds->args[i]);
+        printf("\n");
+        if (cmds->infile)
+            printf("Infile: %s\n", cmds->infile);
+        if (cmds->outfile)
+            printf("Outfile: %s\n", cmds->outfile);
+        printf("-----\n");
+        cmds = cmds->next;
+    }
+}
+
 int	main(void)
 {
 	char	*rl;
 	char	**tokenized;
-	int		index;
+	t_cmd	*cmds;
 
 	signal_setup();
 	while (1)
@@ -25,12 +44,8 @@ int	main(void)
 		if (rl != NULL && *rl)
 			add_history(rl);
 		tokenized = ft_token(rl);
-		index = 0;
-		while (tokenized[index])
-		{
-			printf("%s\n", tokenized[index]);
-			index++;
-		}
+		cmds = add_to_struct(tokenized);
+		print_cmds(cmds);
 		rl = NULL;
 		if (g_signal == SIGINT)
 		{
