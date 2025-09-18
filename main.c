@@ -6,30 +6,11 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/16 17:25:47 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/18 14:14:12 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "miniShell.h"
-
-void	print_cmds(t_cmd *cmds)
-{
-    int i;
-    while (cmds)
-    {
-        printf("Comando: %s\n", cmds->command);
-        printf("Args: ");
-        for (i = 0; cmds->args && cmds->args[i]; i++)
-            printf("[%s] ", cmds->args[i]);
-        printf("\n");
-        if (cmds->infile)
-            printf("Infile: %s\n", cmds->infile);
-        if (cmds->outfile)
-            printf("Outfile: %s\n", cmds->outfile);
-        printf("-----\n");
-        cmds = cmds->next;
-    }
-}
 
 int	main(void)
 {

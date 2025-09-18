@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/16 17:24:09 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/18 12:42:13 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,8 @@ typedef struct	s_cmd
 {
 	char			*command;
 	char			**args;
-	char			*infile;
-	char			*outfile;
+	int				infile;
+	int				outfile;
 	struct s_cmd	*next;
 }				t_cmd;
 t_cmd							*add_to_struct(char **tokenized);
