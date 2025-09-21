@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/19 12:08:32 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/21 22:56:45 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,8 @@ int	main(int argc, char *argv[], char **envp)
 	(void)argc;
 	(void)argv;
 
-	signal_setup();
+	sigint_setup();
+	sigquit_setup();
 	while (1)
 	{
 		rl = readline("miniShell$> ");
@@ -63,15 +64,6 @@ int	main(int argc, char *argv[], char **envp)
 		init_exec_struct(cmds, &exec, envp);
 		print_values(exec);
 		rl = NULL;
-		if (g_signal == SIGINT)
-		{
-			rl_replace_line("", 0);
-			rl_on_new_line();
-			write(1, "\n", 1);
-			rl_redisplay();
-			g_signal = 0;
-		}
-		// else if (g_signal == SIGQUIT)
 	}
 	return (0);
 }

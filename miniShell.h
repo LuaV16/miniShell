@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   miniShell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/19 11:06:55 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/21 22:55:30 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,12 +24,13 @@
 # include <sys/types.h>
 # include <unistd.h>
 
-extern volatile sig_atomic_t	g_signal;
-
 void							signal_setup(void);
 char							**ft_token(char *rl);
 void							null_content(char c, char quote);
 void							close_quotes(char c);
+void 	sigint_setup(void);
+void	sigquit_setup(void);
+
 typedef struct	s_cmd
 {
 	char			*command;

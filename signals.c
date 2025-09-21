@@ -3,32 +3,38 @@
 /*                                                        :::      ::::::::   */
 /*   signals.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 15:39:00 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/15 14:08:22 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/21 22:55:53 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "miniShell.h"
 
-volatile sig_atomic_t	g_signal = 0;
-
-static void	signal_handler(int signal)
+void sigint_handler(int signo)
 {
-	if (signal == SIGINT)
-		g_signal = SIGINT;
-	else if (signal == SIGQUIT)
-		g_signal = SIGQUIT;
+	(void)signo;
+	write(1, "\n", 1);
+	rl_on_new_line();
+	rl_replace_line("", 0);
+	rl_redisplay();
 }
 
-void	signal_setup(void)
+void sigint_setup(void)
 {
 	struct sigaction	sa;
 
-	sa.sa_handler = signal_handler;
 	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0;
+	sa.sa_handler = sigint_handler;
 	sigaction(SIGINT, &sa, NULL);
+}
+
+void	sigquit_setup(void)
+{
+	struct sigaction	sa;
+
+	sigemptyset(&sa.sa_mask);
+	sa.sa_handler = SIG_IGN;
 	sigaction(SIGQUIT, &sa, NULL);
 }
