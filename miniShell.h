@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   miniShell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/21 22:55:30 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/09/22 14:22:17 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@
 # include <stdlib.h>
 # include <sys/types.h>
 # include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 void							signal_setup(void);
 char							**ft_token(char *rl);
@@ -52,4 +54,6 @@ typedef struct	s_exec
 }				t_exec;		
 t_cmd					*add_to_struct(char **tokenized);
 void					init_exec_struct(t_cmd *cmds, t_exec *exec, char **envp);
+void					free_context(t_exec exec, t_cmd *cmds, int exit_flags);
+pid_t					fork_procces(int index, t_exec *exec, t_cmd *cmd);
 #endif

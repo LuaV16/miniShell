@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 10:15:38 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/15 14:06:15 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/22 13:19:53 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ int	is_space(char c)
 
 int	is_special_char(char c)
 {
-	if (c == '>' || c == '<' || c == '|')
+	if (c == '>' || c == '<' || c == '|' || c == '$')
 		return (1);
 	return (0);
 }
@@ -151,6 +151,9 @@ char	**ft_token(char *rl)
 {
 	char	**split;
 
+	if (!rl || !*rl)
+		return (NULL);
+	
 	split = (char **)malloc((count_words(rl) + 1) * sizeof(char *));
 	if (!split)
 		return (NULL);

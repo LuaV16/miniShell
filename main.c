@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/21 22:56:45 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/09/22 14:49:42 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,12 @@ void	print_values(t_exec exec)
 				printf("ARGS[%i] %s", index, exec.cmds -> args[j]);
 				j++;
 		}
+		j = 0;
+		while (exec.cmd_paths[j])
+		{
+			printf("PATHS[%i] %s", j, exec.cmd_paths[j]);
+				j++;
+		}
 		if ((exec.cmds -> args[j]))
 			printf("\n");
 		exec.cmds = exec.cmds -> next;
@@ -49,6 +55,9 @@ int	main(int argc, char *argv[], char **envp)
 	char	**tokenized;
 	t_cmd	*cmds;
 	t_exec	exec;
+	t_cmd	*current;
+	int		index;
+	int		status;
 	(void)argc;
 	(void)argv;
 
@@ -57,13 +66,79 @@ int	main(int argc, char *argv[], char **envp)
 	while (1)
 	{
 		rl = readline("miniShell$> ");
+		if (rl == NULL)
+		{
+			// Solo salir si estamos en modo no-interactivo (pipe/redirección)
+			if (!isatty(STDIN_FILENO))
+			{
+				break;
+			}
+			// En modo interactivo, Ctrl+D sale
+			printf("exit\n");
+			break;
+		}
+		
 		if (rl != NULL && *rl)
 			add_history(rl);
+		
+		if (!*rl) // Línea vacía
+		{
+			free(rl);
+			continue;
+		}
+		
 		tokenized = ft_token(rl);
+		if (!tokenized)
+		{
+			free(rl);
+			continue;
+		}
+		
 		cmds = add_to_struct(tokenized);
+		if (!cmds)
+		{
+			// Liberar tokenized
+			int i = 0;
+			while (tokenized[i])
+				free(tokenized[i++]);
+			free(tokenized);
+			free(rl);
+			continue;
+		}
+		
 		init_exec_struct(cmds, &exec, envp);
-		print_values(exec);
-		rl = NULL;
+		current = exec.cmds;
+		index = 0;
+		while (current)
+		{
+			exec.pids[index] = fork_procces(index, &exec, current);
+			index++;
+			current = current -> next;
+		}
+		index = 0;
+		while (index < exec.count_cmds)
+		{
+			waitpid(exec.pids[index], &status, 0);
+			index++;
+		}
+		
+		// Liberar memoria
+		int i = 0;
+		while (tokenized[i])
+			free(tokenized[i++]);
+		free(tokenized);
+		free(rl);
+		
+		// Limpiar estructuras cmd
+		t_cmd *tmp;
+		while (cmds)
+		{
+			tmp = cmds->next;
+			free(cmds->args);
+			free(cmds);
+			cmds = tmp;
+		}
 	}
-	return (0);
+	// free_context(exec, cmds, 0);  // Comentado temporalmente para evitar segfault
+	return (0);  // Cambiado para retornar 0 por defecto
 }
