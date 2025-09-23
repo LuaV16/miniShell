@@ -6,11 +6,26 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/22 14:51:00 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/23 09:54:41 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../miniShell.h"
+
+void	free_resources(char **str)
+{
+	int	index;
+
+	if (!str)
+		return ;
+	index = 0;
+	while (str[index])
+	{
+		free(str[index]);
+		index++;
+	}
+	free(str);
+}
 
 int	cmds_size(t_cmd *cmd)
 {
@@ -63,6 +78,7 @@ char	*init_cmd_path(t_exec exec, char *command)
 		return (NULL);
 	path = ft_split(path_envp, ':');
 	result = find_command(path, command);
+	free_resources(path);
 	return (result);
 }
 char **get_cmd_paths(t_exec exec, t_cmd *cmds)
@@ -114,7 +130,8 @@ void	init_pipe(t_exec *exec)
 
 void	redirect_stdio(t_exec exec, t_cmd *cmd, int index)
 {
-	
+	printf("infile: %i\n", cmd->infile);
+    fflush(stdout);
 	if (cmd->prev_fd > 0)
 		dup2(cmd->prev_fd, STDIN_FILENO);
 	if (cmd->infile > 0)
@@ -148,25 +165,19 @@ void	clean_child(int index, t_exec exec, t_cmd *cmd)
 		close(cmd->infile);
 }
 
-void	free_resources(char **str)
-{
-	int	index;
-
-	index = 0;
-	while (str[index])
-	{
-		free(str[index]);
-		index++;
-	}
-	free(str);
-}
-
 void	free_context(t_exec exec, t_cmd *cmds, int exit_flags)
 {
+	t_cmd	*current;
+
+	current = cmds;
+	while (current)
+	{
+		if (current -> args)
+			free_resources(current -> args);
+		current = current -> next;
+	}
 	if (exec.pids)
 		free(exec.pids);
-	if (cmds->args)
-		free_resources(cmds->args);
 	if (exec.cmd_paths)
 		free_resources(exec.cmd_paths);
 	if (exit_flags > 0)
@@ -176,7 +187,11 @@ void	free_context(t_exec exec, t_cmd *cmds, int exit_flags)
 void	exec_child(t_cmd *cmds, t_exec exec, int index)
 {
 	if (execve(exec.cmd_paths[index], cmds->args, exec.envp) == -1)
+	{
+		printf("Command '%s' not found\n", cmds -> command);
+		exit(EXIT_FAILURE);
 		free_context(exec, cmds, 1);
+	}
 }
 
 void	clean_parent(int index, t_exec exec, t_cmd *cmds)
@@ -201,7 +216,8 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd)
 	if (!cmd -> command || !exec->cmd_paths)
 	{
 		perror("Command not found");
-		exit(STDERR_FILENO);
+		free_context(*exec, exec->cmds, 0);
+		exit(EXIT_FAILURE);
 	}
 	pid = fork();
 	if (pid == 0)
@@ -213,6 +229,7 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd)
 	else if(pid < 0)
 	{
 		perror("pid error");
+		free_context(*exec, exec->cmds, 0);
 		exit(STDERR_FILENO);
 	}
 	clean_parent(index, *exec, cmd);

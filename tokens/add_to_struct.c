@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/22 14:23:54 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/23 10:05:28 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ int	handle_out_redirection(t_cmd **current, char **tokenized, int *index)
 	return (0);
 }
 
-int	handle_in_redirection(t_cmd **current, char **tokenized, int *index)
+int	handle_in_redirection(t_cmd **current, char **tokenized, int *index, t_cmd **cmds, t_cmd **last)
 {
 	int	fd;
 	
@@ -93,8 +93,16 @@ int	handle_in_redirection(t_cmd **current, char **tokenized, int *index)
 			perror("open infile");
 			exit(1);
 		}
-		if (*current)
-			(*current )-> infile = fd;
+		if (!*current)
+		{
+			*current = new_cmd();
+			if (!*cmds)
+			{
+				*cmds = *current;
+				*last = *current;
+			}
+		}
+		(*current )-> infile = fd;
 		(*index)+= 2;
 		return (1);
 	}
@@ -153,7 +161,7 @@ t_cmd	*add_to_struct(char **tokenized)
 	{
 		if (handle_pipe(&cmds, &current, &last, &arg_pos, tokenized, &index))
 			continue;
-		else if (handle_in_redirection(&current, tokenized, &index))
+		else if (handle_in_redirection(&current, tokenized, &index, &cmds, &last))
 			continue;
 		else if (handle_out_redirection(&current, tokenized, &index))
 			continue;
