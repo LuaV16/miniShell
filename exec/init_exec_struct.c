@@ -6,11 +6,12 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/24 14:03:18 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 19:03:54 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../miniShell.h"
+#include <linux/limits.h>
 
 void	free_resources(char **str)
 {
@@ -179,13 +180,60 @@ void	free_context(t_exec exec, t_cmd *cmds, int exit_flags, char **tokenized)
 	if (exec.pids)
 		free(exec.pids);
 	if (exec.cmd_paths)
-	{
 		free_resources(exec.cmd_paths);
+	if (tokenized)
 		free_resources(tokenized);
-	}
 	if (exit_flags > 0)
 		exit(127);
-	free_resources(tokenized);
+}
+
+int	builtin_cd(t_cmd *cmd)
+{
+	char	*target;
+	
+	if (!cmd -> args[1] || cmd -> args[1][0] == '\0')
+	{
+		target = getenv("HOME");
+		if (!target)
+			return (perror("cd : HOME nor set"), 1);
+	}
+	else
+		target = cmd -> args[1];
+	if (chdir(target) != 0)
+		return(perror("cd"), 1);
+	return (0);
+}
+
+int	builtin_pwd(void)
+{
+	char	buffer[PATH_MAX];
+	if (getcwd(buffer, sizeof(buffer)) != NULL)
+		printf("%s\n", buffer);
+	else
+		perror("getcwd");
+	return (0);
+}
+
+int	is_builtin_name(t_cmd *cmds)
+{
+	if (ft_strncmp(cmds -> command, "cd", 3) == 0)
+		return(1);
+	else if (ft_strncmp(cmds -> command, "pwd", 4) == 0)
+		return (1);
+	/*else if (ft_strncmp(cmds -> command, "echo", 5) == 0)
+		return (1);
+	else if (ft_strncmp(cmds -> command, "export", 7) == 0)
+		return (1);*/
+	return (0);
+}
+
+int	exec_builtin(t_cmd *cmd)
+{
+	if (ft_strncmp(cmd -> command, "cd", 3) == 0)
+		return(builtin_cd(cmd));
+	if (ft_strncmp(cmd -> command, "pwd", 4) == 0)
+		return(builtin_pwd());
+	return (0);
 }
 
 void	exec_child(t_cmd *cmds, t_exec exec, int index, char **tokenized)
@@ -214,7 +262,14 @@ void	clean_parent(int index, t_exec exec, t_cmd *cmds)
 pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized)
 {
 	pid_t	pid;
-	
+	int status;
+
+	if (is_builtin_name(cmd))
+	{
+		status = exec_builtin(cmd);
+		(void)status;
+		return (-1);
+	}
 	if (!is_last(index, *exec))
 		init_pipe(exec);
 	if (!cmd -> command || !exec->cmd_paths)
