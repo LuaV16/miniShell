@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/23 09:54:41 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 10:05:16 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,6 +91,8 @@ char **get_cmd_paths(t_exec exec, t_cmd *cmds)
 	total_cmds = exec.count_cmds;
 	index = 0;
 	cmd_paths = (char**)malloc(sizeof(char*) * (total_cmds + 1));
+	if (!cmd_paths)
+		return (NULL);
 	current = cmds;
 	while (index < total_cmds && current)
 	{
@@ -130,8 +132,6 @@ void	init_pipe(t_exec *exec)
 
 void	redirect_stdio(t_exec exec, t_cmd *cmd, int index)
 {
-	printf("infile: %i\n", cmd->infile);
-    fflush(stdout);
 	if (cmd->prev_fd > 0)
 		dup2(cmd->prev_fd, STDIN_FILENO);
 	if (cmd->infile > 0)

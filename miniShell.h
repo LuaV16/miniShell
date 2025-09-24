@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/22 14:22:17 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 10:30:42 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,12 +32,16 @@ void							null_content(char c, char quote);
 void							close_quotes(char c);
 void 	sigint_setup(void);
 void	sigquit_setup(void);
+int	is_special_char(char c);
+
 
 typedef struct	s_cmd
 {
 	char			*command;
 	char			**args;
 	int				infile;
+	char			*pending_infile;
+	char			*pending_outfile;
 	int				outfile;
 	int				prev_fd;
 	struct s_cmd	*next;
