@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/24 12:18:19 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 14:07:17 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,14 +83,15 @@ int	main(int argc, char *argv[], char **envp)
 			continue;
 		}
 		
-		tokenized = ft_token(rl);
+		tokenized = ft_token(rl, &exec);
+		
 		if (!tokenized)
 		{
 			free(rl);
 			continue;
 		}
 		
-		cmds = add_to_struct(tokenized);
+		cmds = add_to_struct(tokenized, exec);
 		if (!cmds)
 		{
 			// Liberar tokenized

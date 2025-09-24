@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/24 12:37:40 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 14:05:00 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,15 +120,18 @@ int	handle_in_redirection(t_cmd **current, char **tokenized, int *index, t_cmd *
 	return (0);
 }
 
-int	handle_dolar(char **tokenized, int *index)
+int	handle_dolar(char **tokenized, int *index, t_exec exec)
 {
 	char	*env;
 	char	*var;
 	int		i;
-	int		j;
 	
 	if (!tokenized[*index])
 		return (0);
+
+	if (exec.quote_type[*index] == 1)
+		return (0);
+
 	if (ft_strncmp(tokenized[*index], "$", ft_strlen(tokenized[*index])) == 0)
 	{
 		env = getenv(tokenized[(*index) + 1]);
@@ -150,14 +153,7 @@ int	handle_dolar(char **tokenized, int *index)
 	else if (tokenized[*index][0] == '$')
 	{
 		var = (char*)malloc(sizeof(char) * ft_strlen(tokenized[*index] + 1));
-		i = 1;
-		while (tokenized[*index][i])
-		{
-			j = i - 1;
-			var[j] = tokenized[*index][i];
-			j++;
-			i++;
-		}
+		ft_strlcpy(var, tokenized[*index] + 1, ft_strlen(tokenized[*index]));
 		env = getenv(var);
 		free(tokenized[*index]);
 		if (env)
@@ -167,6 +163,7 @@ int	handle_dolar(char **tokenized, int *index)
 		free(var);
 		return (1);
 	}
+	
 	return (0);
 }
 
@@ -218,7 +215,7 @@ int	first_char_is_special(char **tokenized, int *index, char	**pending_infile, c
 	}
 	return (0);
 }
-t_cmd	*add_to_struct(char **tokenized)
+t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 {
 	int	index;
 	int	arg_pos;
@@ -260,7 +257,7 @@ t_cmd	*add_to_struct(char **tokenized)
 			continue;
 		else if (handle_out_redirection(&current, tokenized, &index))
 			continue;
-		else if (handle_dolar(tokenized, &index))
+		else if (handle_dolar(tokenized, &index, exec))
 			continue;
 		else
 		{
