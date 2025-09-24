@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 10:15:38 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/22 13:19:53 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 12:11:43 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,8 +133,7 @@ int	fill_result(char *rl, char **res)
 			i++;
 		if (!rl[i])
 			break ;
-		if (!fill_quotes(rl, &i, res, &j) && !fill_special_chars(rl, &i, res,
-				&j))
+		if (!fill_quotes(rl, &i, res, &j) && !fill_special_chars(rl, &i, res, &j))
 		{
 			start = i;
 			while (rl[i] && !is_space(rl[i]) && rl[i] != '"' && rl[i] != '\''
@@ -158,6 +157,9 @@ char	**ft_token(char *rl)
 	if (!split)
 		return (NULL);
 	if (!fill_result(rl, split))
+	{
+		free_resources(split);
 		return (NULL);
+	}
 	return (split);
 }

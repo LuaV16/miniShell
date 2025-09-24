@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/24 09:46:18 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 12:18:19 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,9 +69,7 @@ int	main(int argc, char *argv[], char **envp)
 		if (rl == NULL)
 		{
 			if (!isatty(STDIN_FILENO))
-			{
 				break;
-			}
 			printf("exit\n");
 			break;
 		}
@@ -98,7 +96,7 @@ int	main(int argc, char *argv[], char **envp)
 			// Liberar tokenized
 			int i = 0;
 			while (tokenized[i])
-				free(tokenized[i++]);
+			free(tokenized[i++]);
 			free(tokenized);
 			free(rl);
 			continue;
@@ -109,7 +107,7 @@ int	main(int argc, char *argv[], char **envp)
 		index = 0;
 		while (current)
 		{
-			exec.pids[index] = fork_procces(index, &exec, current);
+			exec.pids[index] = fork_procces(index, &exec, current, tokenized);
 			index++;
 			current = current -> next;
 		}
@@ -122,7 +120,7 @@ int	main(int argc, char *argv[], char **envp)
 		
 		int i = 0;
 		while (tokenized[i])
-			free(tokenized[i++]);
+		free(tokenized[i++]);
 		free(tokenized);
 		free(rl);
 		

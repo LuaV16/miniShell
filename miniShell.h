@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/24 10:30:42 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 12:11:33 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,7 @@ typedef struct	s_exec
 }				t_exec;		
 t_cmd					*add_to_struct(char **tokenized);
 void					init_exec_struct(t_cmd *cmds, t_exec *exec, char **envp);
-void					free_context(t_exec exec, t_cmd *cmds, int exit_flags);
-pid_t					fork_procces(int index, t_exec *exec, t_cmd *cmd);
+void					free_context(t_exec exec, t_cmd *cmds, int exit_flags, char **tokenized);
+void					free_resources(char **str);
+pid_t					fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized);
 #endif

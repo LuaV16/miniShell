@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/24 10:05:16 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 12:14:25 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,7 +165,7 @@ void	clean_child(int index, t_exec exec, t_cmd *cmd)
 		close(cmd->infile);
 }
 
-void	free_context(t_exec exec, t_cmd *cmds, int exit_flags)
+void	free_context(t_exec exec, t_cmd *cmds, int exit_flags, char **tokenized)
 {
 	t_cmd	*current;
 
@@ -179,18 +179,22 @@ void	free_context(t_exec exec, t_cmd *cmds, int exit_flags)
 	if (exec.pids)
 		free(exec.pids);
 	if (exec.cmd_paths)
+	{
 		free_resources(exec.cmd_paths);
+		free_resources(tokenized);
+	}
 	if (exit_flags > 0)
 		exit(127);
+	free_resources(tokenized);
 }
 
-void	exec_child(t_cmd *cmds, t_exec exec, int index)
+void	exec_child(t_cmd *cmds, t_exec exec, int index, char **tokenized)
 {
 	if (execve(exec.cmd_paths[index], cmds->args, exec.envp) == -1)
 	{
 		printf("Command '%s' not found\n", cmds -> command);
 		exit(EXIT_FAILURE);
-		free_context(exec, cmds, 1);
+		free_context(exec, cmds, 1, tokenized);
 	}
 }
 
@@ -207,7 +211,7 @@ void	clean_parent(int index, t_exec exec, t_cmd *cmds)
 		close(cmds->outfile);
 }
 
-pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd)
+pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized)
 {
 	pid_t	pid;
 	
@@ -216,7 +220,7 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd)
 	if (!cmd -> command || !exec->cmd_paths)
 	{
 		perror("Command not found");
-		free_context(*exec, exec->cmds, 0);
+		free_context(*exec, exec->cmds, 0, tokenized);
 		exit(EXIT_FAILURE);
 	}
 	pid = fork();
@@ -224,12 +228,12 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd)
 	{
 		redirect_stdio(*exec, cmd, index);
 		clean_child(index, *exec, cmd);
-		exec_child(cmd, *exec, index);
+		exec_child(cmd, *exec, index, tokenized);
 	}
 	else if(pid < 0)
 	{
 		perror("pid error");
-		free_context(*exec, exec->cmds, 0);
+		free_context(*exec, exec->cmds, 0, tokenized);
 		exit(STDERR_FILENO);
 	}
 	clean_parent(index, *exec, cmd);

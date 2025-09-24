@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/24 10:49:29 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 12:37:40 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,13 @@ int	count_args(char **tokenized, int start)
 	count = 0;
 	while (tokenized[start])
 	{
-		if (tokenized[start][0] == '|' || tokenized[start][0] == '<'|| tokenized[start][0] == '>')
+		if (tokenized[start][0] == '|')
 			break;
+		if ((tokenized[start][0] == '<' || tokenized[start][0] == '>') && tokenized[start][1] == '\0' && tokenized[start + 1])
+		{
+			start += 2;
+			continue ;
+		}
 		start++;
 		count++;
 	}
@@ -115,26 +120,51 @@ int	handle_in_redirection(t_cmd **current, char **tokenized, int *index, t_cmd *
 	return (0);
 }
 
-int	handle_dolar(char **tokenized, int *index, t_cmd **current)
+int	handle_dolar(char **tokenized, int *index)
 {
 	char	*env;
+	char	*var;
 	int		i;
+	int		j;
 	
-	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current) || !(*current) -> command)
+	if (!tokenized[*index])
 		return (0);
 	if (ft_strncmp(tokenized[*index], "$", ft_strlen(tokenized[*index])) == 0)
 	{
 		env = getenv(tokenized[(*index) + 1]);
+		free(tokenized[*index]);
 		if (env)
 			tokenized[*index] = ft_strdup(env);
 		else
 			tokenized[*index] = ft_strdup("");
+		free(tokenized[(*index) + 1]);
 		i = (*index) + 1;
 		while (tokenized[i])
 		{
 			tokenized[i] = tokenized[i + 1]	;
 			i++;
 		}
+		return (1);
+	}
+	
+	else if (tokenized[*index][0] == '$')
+	{
+		var = (char*)malloc(sizeof(char) * ft_strlen(tokenized[*index] + 1));
+		i = 1;
+		while (tokenized[*index][i])
+		{
+			j = i - 1;
+			var[j] = tokenized[*index][i];
+			j++;
+			i++;
+		}
+		env = getenv(var);
+		free(tokenized[*index]);
+		if (env)
+			tokenized[*index] = ft_strdup(env);
+		else
+			tokenized[*index] = ft_strdup("");
+		free(var);
 		return (1);
 	}
 	return (0);
@@ -152,28 +182,15 @@ void set_prev_fd(t_cmd *cmds)
 	}
 }
 
-void	handle_argument(t_cmd **cmds, t_cmd **current, t_cmd **last, int *arg_pos, char **tokenized, int *index)
+void	handle_argument(t_cmd **current, int *arg_pos, char **tokenized, int *index, int argc)
 {
-	int	argc;
-
 	if (is_special_char(tokenized[*index][0]))
 	{
 		(*index)++;
 		return ;
 	}
-	argc = count_args(tokenized, *index);
 	if (!tokenized[*index])
 		return ;
-	if (!(*current))
-	{
-		*current = new_cmd(argc);
-		if (!(*cmds))
-		{
-			*cmds = *current;
-			*last = *current;
-		}
-		*arg_pos = 0;
-	}
 	if (!(*current) -> command && *arg_pos == 0)
 		(*current) -> command = tokenized[*index];
 	if (*arg_pos < argc)
@@ -186,14 +203,14 @@ void	handle_argument(t_cmd **cmds, t_cmd **current, t_cmd **last, int *arg_pos, 
 
 int	first_char_is_special(char **tokenized, int *index, char	**pending_infile, char	**pending_outfile)
 {
-	if (*tokenized[*index] && *tokenized[*index + 1] && ft_strncmp(tokenized[*index], "<", ft_strlen(tokenized[*index])))
+	if (tokenized[*index] && tokenized[*index + 1] && ft_strncmp(tokenized[*index], "<", ft_strlen(tokenized[*index])) == 0)
 	{
 		*pending_infile = tokenized[(*index) + 1];
 		(*index) += 2;
 		return (1);
 	}
 
-	if (*tokenized[*index] && *tokenized[*index + 1] && ft_strncmp(tokenized[*index], ">", ft_strlen(tokenized[*index])))
+	if (tokenized[*index] && tokenized[*index + 1] && ft_strncmp(tokenized[*index], ">", ft_strlen(tokenized[*index])) == 0)
 	{
 		*pending_outfile = tokenized[(*index) + 1];
 		(*index) += 2;
@@ -210,6 +227,7 @@ t_cmd	*add_to_struct(char **tokenized)
 	t_cmd	*last;
 	char	*pending_infile;
 	char	*pending_outfile;
+	int		argc;
 
 	index = 0;
 	arg_pos = 0;
@@ -218,10 +236,22 @@ t_cmd	*add_to_struct(char **tokenized)
 	last = NULL;
 	pending_infile = NULL;
 	pending_outfile = NULL;
+	argc = 0;
 	if (!tokenized)
 		return (NULL);
 	while (tokenized[index])
 	{
+		if (!(current))
+	{
+		argc = count_args(tokenized, index);
+		current = new_cmd(argc);
+		if (!(cmds))
+		{
+			cmds = current;
+			last = current;
+		}
+		arg_pos = 0;
+	}
 		if (first_char_is_special(tokenized, &index, &pending_infile, &pending_outfile) && !current)
 			continue;
 		if (handle_pipe(&cmds, &current, &last, &arg_pos, tokenized, &index))
@@ -230,11 +260,11 @@ t_cmd	*add_to_struct(char **tokenized)
 			continue;
 		else if (handle_out_redirection(&current, tokenized, &index))
 			continue;
-		else if (handle_dolar(tokenized, &index, &cmds))
+		else if (handle_dolar(tokenized, &index))
 			continue;
 		else
 		{
-			handle_argument(&cmds, &current, &last, &arg_pos, tokenized, &index);
+			handle_argument(&current, &arg_pos, tokenized, &index, argc);
 			if (pending_infile && current && current -> infile == 0)
 			{
 				current -> infile = open(pending_infile, O_RDONLY);
