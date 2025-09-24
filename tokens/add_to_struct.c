@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/24 14:05:00 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/24 17:49:00 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,14 @@ int	count_args(char **tokenized, int start)
 	{
 		if (tokenized[start][0] == '|')
 			break;
-		if ((tokenized[start][0] == '<' || tokenized[start][0] == '>') && tokenized[start][1] == '\0' && tokenized[start + 1])
+		if ((tokenized[start][0] == '<' || tokenized[start][0] == '>') &&
+			tokenized[start][1] == '\0')
 		{
-			start += 2;
-			continue ;
+			if (tokenized[start + 1])
+			{
+				start += 2;
+				continue ;
+			}
 		}
 		start++;
 		count++;
@@ -54,28 +58,26 @@ static t_cmd *new_cmd(int argc)
 
 int	handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **last, int *arg_pos, char **tokenized, int *index)
 {
-	t_cmd	*new_command;
-	int		argc;
-	
-	argc = count_args(tokenized, (*index) + 1);
-	if (!tokenized[*index])
-		return (0);
-	if (tokenized[*index][0] == '|' && tokenized[*index][1] == '\0')
-	{
-		new_command = new_cmd(argc);
-		if (!new_command)
-			return (0);
-		if (*current)
-			(*current)->next = new_command;
-		else 
-			*cmds = new_command;
-		*last = new_command;
-		*current = new_command;
-		*arg_pos = 0;
-		(*index)++;
-		return (1);
-	}
-	return (0);
+    t_cmd *new_command;
+    int   argc;
+
+    if (!tokenized[*index])
+        return (0);
+    if (!(tokenized[*index][0] == '|' && tokenized[*index][1] == '\0'))
+        return (0);
+    argc = count_args(tokenized, (*index) + 1);
+    new_command = new_cmd(argc);
+    if (!new_command)
+        return (0);
+    if (*current)
+        (*current)->next = new_command;
+    else
+        *cmds = new_command;
+    *last = new_command;
+    *current = new_command;
+    *arg_pos = 0;
+    (*index)++;
+    return (1);
 }
 
 int	handle_out_redirection(t_cmd **current, char **tokenized, int *index)
@@ -100,9 +102,7 @@ int	handle_out_redirection(t_cmd **current, char **tokenized, int *index)
 int	handle_in_redirection(t_cmd **current, char **tokenized, int *index, t_cmd **cmds)
 {
 	int	fd;
-	int	argc;
-
-	argc = count_args(tokenized, (*index) + 1);
+	
 	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*cmds) || !(*cmds) -> command)
 		return (0);
 	if (ft_strncmp(tokenized[*index], "<", ft_strlen(tokenized[*index])) == 0)
@@ -249,7 +249,7 @@ t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 		}
 		arg_pos = 0;
 	}
-		if (first_char_is_special(tokenized, &index, &pending_infile, &pending_outfile) && !current)
+		if (!current && first_char_is_special(tokenized, &index, &pending_infile, &pending_outfile))
 			continue;
 		if (handle_pipe(&cmds, &current, &last, &arg_pos, tokenized, &index))
 			continue;
