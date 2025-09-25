@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/25 11:54:19 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/25 12:21:31 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,13 +178,25 @@ void	free_context(t_exec exec, t_cmd *cmds, int exit_flags, char **tokenized)
 		current = current -> next;
 	}
 	if (exec.pids)
+	{
 		free(exec.pids);
+		exec.pids = NULL;
+	}
 	if (exec.cmd_paths)
+	{
 		free_resources(exec.cmd_paths);
+		exec.cmd_paths = NULL;
+	}
 	if (tokenized)
+	{
 		free_resources(tokenized);
+		exec.cmd_paths = NULL;
+	}
 	if (exec.quote_type)
+	{
 		free(exec.quote_type);
+		exec.quote_type = NULL;
+	}
 	if (exit_flags > 0)
 		exit(127);
 }

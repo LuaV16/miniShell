@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 10:15:38 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/25 11:51:07 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/25 13:06:20 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,9 +160,9 @@ char	**ft_token(char *rl, t_exec *exec)
 		return (NULL);
 	cw = count_words(rl);
 	split = (char **)malloc((cw + 1) * sizeof(char *));
-	exec -> quote_type = (int*)ft_calloc(sizeof(int), (cw + 1));
 	if (!split)
 		return (NULL);
+	exec -> quote_type = (int*)ft_calloc(sizeof(int), (cw + 1));
 	if (!exec->quote_type)
 	{
 		free(split);
