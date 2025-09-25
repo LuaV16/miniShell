@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   add_to_struct.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/25 10:25:51 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/25 13:15:31 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,6 +153,7 @@ int	handle_dolar(char **tokenized, int *index, t_exec exec)
 		}
 		return (1);
 	}
+	
 	else if (tokenized[*index][0] == '$')
 	{
 		var = (char *)malloc(sizeof(char) * ft_strlen(tokenized[*index] + 1));
@@ -200,6 +201,18 @@ void	handle_argument(t_cmd **current, int *arg_pos, char **tokenized,
 	}
 	(*index)++;
 }
+
+/*void	handle_heredoc(char **tokenized, int *index)
+{
+	char *delim;
+	
+	if (tokenized[*index] && ft_strncmp(tokenized[*index], "<<",
+			ft_strlen(tokenized[*index])) == 0)
+	{
+		delim = ft_strdup(*index + 1);
+		rl = readline("heredoc> ");
+	}
+}*/
 
 int	first_char_is_special(char **tokenized, int *index, char **pending_infile,
 		char **pending_outfile)
@@ -267,6 +280,8 @@ t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 			continue ;
 		else if (handle_dolar(tokenized, &index, exec))
 			continue ;
+		/*else if (handle_heredoc(tokenized, &index))
+			continue ;*/
 		else
 		{
 			handle_argument(&current, &arg_pos, tokenized, &index, argc);

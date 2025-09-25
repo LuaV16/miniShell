@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/25 10:07:57 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/25 12:24:31 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,14 @@ int	main(int argc, char *argv[], char **envp)
 		}
 		
 		tokenized = ft_token(rl, &exec);
+		int	z;
 		
+		z = 0;
+		while (tokenized[z])
+		{
+			printf("TOKENS: %s ", tokenized[z]);
+			z++;	
+		}
 		if (!tokenized)
 		{
 			free(rl);
