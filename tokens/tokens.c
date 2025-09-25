@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 10:15:38 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/24 17:39:15 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/25 11:51:07 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,7 +154,7 @@ int	fill_result(char *rl, char **res, int *quote_type)
 char	**ft_token(char *rl, t_exec *exec)
 {
 	char	**split;
-	int     cw;
+	int		cw;
 
 	if (!rl || !*rl)
 		return (NULL);

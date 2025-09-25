@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/24 19:03:54 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/25 11:54:19 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ char	*find_command(char **path, char *command)
 		free(full_path);
 		j++;
 	}
-	return (ft_strdup(""));
+	return (NULL);
 }
 
 char	*init_cmd_path(t_exec exec, char *command)
@@ -183,6 +183,8 @@ void	free_context(t_exec exec, t_cmd *cmds, int exit_flags, char **tokenized)
 		free_resources(exec.cmd_paths);
 	if (tokenized)
 		free_resources(tokenized);
+	if (exec.quote_type)
+		free(exec.quote_type);
 	if (exit_flags > 0)
 		exit(127);
 }
@@ -214,15 +216,39 @@ int	builtin_pwd(void)
 	return (0);
 }
 
+int builtin_echo(t_cmd *cmd)
+{
+	int	index;
+	int	has_n;
+
+	index = 1;
+	has_n = 1;
+	if (cmd -> args[1] && ft_strncmp(cmd -> args[1], "-n", 3) == 0)
+	{
+		has_n = 0;
+		index = 2;
+	}
+	while (cmd -> args && cmd -> args[index])
+	{
+		write (STDOUT_FILENO, cmd -> args[index], ft_strlen(cmd -> args[index]));
+		if (cmd -> args[index + 1])
+			write(STDOUT_FILENO, " ", 1);
+		index++;
+	}
+	if (has_n)
+		write(STDOUT_FILENO, "\n", 1);
+	return (0);
+}
+
 int	is_builtin_name(t_cmd *cmds)
 {
 	if (ft_strncmp(cmds -> command, "cd", 3) == 0)
 		return(1);
 	else if (ft_strncmp(cmds -> command, "pwd", 4) == 0)
 		return (1);
-	/*else if (ft_strncmp(cmds -> command, "echo", 5) == 0)
+	else if (ft_strncmp(cmds -> command, "echo", 5) == 0)
 		return (1);
-	else if (ft_strncmp(cmds -> command, "export", 7) == 0)
+	/*else if (ft_strncmp(cmds -> command, "export", 7) == 0)
 		return (1);*/
 	return (0);
 }
@@ -231,19 +257,16 @@ int	exec_builtin(t_cmd *cmd)
 {
 	if (ft_strncmp(cmd -> command, "cd", 3) == 0)
 		return(builtin_cd(cmd));
-	if (ft_strncmp(cmd -> command, "pwd", 4) == 0)
+	else if (ft_strncmp(cmd -> command, "pwd", 4) == 0)
 		return(builtin_pwd());
+	else if (ft_strncmp(cmd -> command, "echo", 5) == 0)
+		return (builtin_echo(cmd));
 	return (0);
 }
 
-void	exec_child(t_cmd *cmds, t_exec exec, int index, char **tokenized)
+void	exec_child(t_cmd *cmds, t_exec exec, int index)
 {
-	if (execve(exec.cmd_paths[index], cmds->args, exec.envp) == -1)
-	{
-		printf("Command '%s' not found\n", cmds -> command);
-		exit(EXIT_FAILURE);
-		free_context(exec, cmds, 1, tokenized);
-	}
+	execve(exec.cmd_paths[index], cmds->args, exec.envp);
 }
 
 void	clean_parent(int index, t_exec exec, t_cmd *cmds)
@@ -266,24 +289,38 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized)
 
 	if (is_builtin_name(cmd))
 	{
-		status = exec_builtin(cmd);
-		(void)status;
-		return (-1);
+		if (is_last(index, *exec) &&  cmd -> infile <= 0 && cmd -> outfile <= 1 && cmd -> prev_fd <= 0)
+		{
+			status = exec_builtin(cmd);
+			(void)status;
+			return (-1);
+		}
 	}
 	if (!is_last(index, *exec))
 		init_pipe(exec);
-	if (!cmd -> command || !exec->cmd_paths)
+	if (!cmd -> command)
 	{
-		perror("Command not found");
-		free_context(*exec, exec->cmds, 0, tokenized);
-		exit(EXIT_FAILURE);
+		printf("Command '%s' not found\n", cmd -> command);
+		free_context(*exec, cmd, 0, tokenized);
+		return (-1);
+	}
+	if (!is_builtin_name(cmd))
+	{
+		if (!exec -> cmd_paths || !exec -> cmd_paths[index])
+		{
+			printf("Command '%s' not found\n", cmd -> command);
+			free_context(*exec, cmd, 0, tokenized);
+			return (-1);
+		}
 	}
 	pid = fork();
 	if (pid == 0)
 	{
 		redirect_stdio(*exec, cmd, index);
 		clean_child(index, *exec, cmd);
-		exec_child(cmd, *exec, index, tokenized);
+		if (is_builtin_name(cmd))
+			exit(exec_builtin(cmd));
+		exec_child(cmd, *exec, index);
 	}
 	else if(pid < 0)
 	{

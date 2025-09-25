@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/24 17:49:00 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/25 10:25:51 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,9 @@ int	count_args(char **tokenized, int start)
 	while (tokenized[start])
 	{
 		if (tokenized[start][0] == '|')
-			break;
-		if ((tokenized[start][0] == '<' || tokenized[start][0] == '>') &&
-			tokenized[start][1] == '\0')
+			break ;
+		if ((tokenized[start][0] == '<' || tokenized[start][0] == '>')
+			&& tokenized[start][1] == '\0')
 		{
 			if (tokenized[start + 1])
 			{
@@ -36,9 +36,11 @@ int	count_args(char **tokenized, int start)
 	return (count);
 }
 
-static t_cmd *new_cmd(int argc)
+static t_cmd	*new_cmd(int argc)
 {
-	t_cmd *cmd = malloc(sizeof(t_cmd));
+	t_cmd	*cmd;
+
+	cmd = malloc(sizeof(t_cmd));
 	if (!cmd)
 		return (NULL);
 	ft_bzero(cmd, sizeof(t_cmd));
@@ -56,35 +58,37 @@ static t_cmd *new_cmd(int argc)
 	return (cmd);
 }
 
-int	handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **last, int *arg_pos, char **tokenized, int *index)
+int	handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **last, int *arg_pos,
+		char **tokenized, int *index)
 {
-    t_cmd *new_command;
-    int   argc;
+	t_cmd	*new_command;
+	int		argc;
 
-    if (!tokenized[*index])
-        return (0);
-    if (!(tokenized[*index][0] == '|' && tokenized[*index][1] == '\0'))
-        return (0);
-    argc = count_args(tokenized, (*index) + 1);
-    new_command = new_cmd(argc);
-    if (!new_command)
-        return (0);
-    if (*current)
-        (*current)->next = new_command;
-    else
-        *cmds = new_command;
-    *last = new_command;
-    *current = new_command;
-    *arg_pos = 0;
-    (*index)++;
-    return (1);
+	if (!tokenized[*index])
+		return (0);
+	if (!(tokenized[*index][0] == '|' && tokenized[*index][1] == '\0'))
+		return (0);
+	argc = count_args(tokenized, (*index) + 1);
+	new_command = new_cmd(argc);
+	if (!new_command)
+		return (0);
+	if (*current)
+		(*current)->next = new_command;
+	else
+		*cmds = new_command;
+	*last = new_command;
+	*current = new_command;
+	*arg_pos = 0;
+	(*index)++;
+	return (1);
 }
 
 int	handle_out_redirection(t_cmd **current, char **tokenized, int *index)
 {
 	int	fd;
-	
-	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current) || !(*current) -> command)
+
+	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current)
+		|| !(*current)->command)
 		return (0);
 	if (!*current)
 		return (0);
@@ -92,18 +96,20 @@ int	handle_out_redirection(t_cmd **current, char **tokenized, int *index)
 	{
 		fd = open(tokenized[(*index) + 1], O_RDWR | O_CREAT, 0644);
 		if (*current)
-			(*current) -> outfile = fd;
-		(*index)+= 2;
+			(*current)->outfile = fd;
+		(*index) += 2;
 		return (1);
 	}
 	return (0);
 }
 
-int	handle_in_redirection(t_cmd **current, char **tokenized, int *index, t_cmd **cmds)
+int	handle_in_redirection(t_cmd **current, char **tokenized, int *index,
+		t_cmd **cmds)
 {
 	int	fd;
-	
-	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*cmds) || !(*cmds) -> command)
+
+	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*cmds)
+		|| !(*cmds)->command)
 		return (0);
 	if (ft_strncmp(tokenized[*index], "<", ft_strlen(tokenized[*index])) == 0)
 	{
@@ -113,8 +119,8 @@ int	handle_in_redirection(t_cmd **current, char **tokenized, int *index, t_cmd *
 			perror("open infile");
 			exit(1);
 		}
-		(*current )-> infile = fd;
-		(*index)+= 2;
+		(*current)->infile = fd;
+		(*index) += 2;
 		return (1);
 	}
 	return (0);
@@ -125,13 +131,11 @@ int	handle_dolar(char **tokenized, int *index, t_exec exec)
 	char	*env;
 	char	*var;
 	int		i;
-	
+
 	if (!tokenized[*index])
 		return (0);
-
 	if (exec.quote_type[*index] == 1)
 		return (0);
-
 	if (ft_strncmp(tokenized[*index], "$", ft_strlen(tokenized[*index])) == 0)
 	{
 		env = getenv(tokenized[(*index) + 1]);
@@ -144,15 +148,14 @@ int	handle_dolar(char **tokenized, int *index, t_exec exec)
 		i = (*index) + 1;
 		while (tokenized[i])
 		{
-			tokenized[i] = tokenized[i + 1]	;
+			tokenized[i] = tokenized[i + 1];
 			i++;
 		}
 		return (1);
 	}
-	
 	else if (tokenized[*index][0] == '$')
 	{
-		var = (char*)malloc(sizeof(char) * ft_strlen(tokenized[*index] + 1));
+		var = (char *)malloc(sizeof(char) * ft_strlen(tokenized[*index] + 1));
 		ft_strlcpy(var, tokenized[*index] + 1, ft_strlen(tokenized[*index]));
 		env = getenv(var);
 		free(tokenized[*index]);
@@ -163,11 +166,10 @@ int	handle_dolar(char **tokenized, int *index, t_exec exec)
 		free(var);
 		return (1);
 	}
-	
 	return (0);
 }
 
-void set_prev_fd(t_cmd *cmds)
+void	set_prev_fd(t_cmd *cmds)
 {
 	t_cmd	*curr;
 
@@ -179,7 +181,8 @@ void set_prev_fd(t_cmd *cmds)
 	}
 }
 
-void	handle_argument(t_cmd **current, int *arg_pos, char **tokenized, int *index, int argc)
+void	handle_argument(t_cmd **current, int *arg_pos, char **tokenized,
+		int *index, int argc)
 {
 	if (is_special_char(tokenized[*index][0]))
 	{
@@ -188,26 +191,30 @@ void	handle_argument(t_cmd **current, int *arg_pos, char **tokenized, int *index
 	}
 	if (!tokenized[*index])
 		return ;
-	if (!(*current) -> command && *arg_pos == 0)
-		(*current) -> command = tokenized[*index];
+	if (!(*current)->command && *arg_pos == 0)
+		(*current)->command = tokenized[*index];
 	if (*arg_pos < argc)
 	{
-		(*current) -> args[(*arg_pos)++] = tokenized[*index];
-		(*current) -> args[(*arg_pos)] = NULL;
+		(*current)->args[(*arg_pos)++] = tokenized[*index];
+		(*current)->args[(*arg_pos)] = NULL;
 	}
 	(*index)++;
 }
 
-int	first_char_is_special(char **tokenized, int *index, char	**pending_infile, char	**pending_outfile)
+int	first_char_is_special(char **tokenized, int *index, char **pending_infile,
+		char **pending_outfile)
 {
-	if (tokenized[*index] && tokenized[*index + 1] && ft_strncmp(tokenized[*index], "<", ft_strlen(tokenized[*index])) == 0)
+	if (tokenized[*index] && tokenized[*index + 1]
+		&& ft_strncmp(tokenized[*index], "<",
+			ft_strlen(tokenized[*index])) == 0)
 	{
 		*pending_infile = tokenized[(*index) + 1];
 		(*index) += 2;
 		return (1);
 	}
-
-	if (tokenized[*index] && tokenized[*index + 1] && ft_strncmp(tokenized[*index], ">", ft_strlen(tokenized[*index])) == 0)
+	if (tokenized[*index] && tokenized[*index + 1]
+		&& ft_strncmp(tokenized[*index], ">",
+			ft_strlen(tokenized[*index])) == 0)
 	{
 		*pending_outfile = tokenized[(*index) + 1];
 		(*index) += 2;
@@ -217,8 +224,8 @@ int	first_char_is_special(char **tokenized, int *index, char	**pending_infile, c
 }
 t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 {
-	int	index;
-	int	arg_pos;
+	int		index;
+	int		arg_pos;
 	t_cmd	*cmds;
 	t_cmd	*current;
 	t_cmd	*last;
@@ -239,42 +246,44 @@ t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 	while (tokenized[index])
 	{
 		if (!(current))
-	{
-		argc = count_args(tokenized, index);
-		current = new_cmd(argc);
-		if (!(cmds))
 		{
-			cmds = current;
-			last = current;
+			argc = count_args(tokenized, index);
+			current = new_cmd(argc);
+			if (!(cmds))
+			{
+				cmds = current;
+				last = current;
+			}
+			arg_pos = 0;
 		}
-		arg_pos = 0;
-	}
-		if (!current && first_char_is_special(tokenized, &index, &pending_infile, &pending_outfile))
-			continue;
+		if (!current && first_char_is_special(tokenized, &index,
+				&pending_infile, &pending_outfile))
+			continue ;
 		if (handle_pipe(&cmds, &current, &last, &arg_pos, tokenized, &index))
-			continue;
+			continue ;
 		else if (handle_in_redirection(&current, tokenized, &index, &cmds))
-			continue;
+			continue ;
 		else if (handle_out_redirection(&current, tokenized, &index))
-			continue;
+			continue ;
 		else if (handle_dolar(tokenized, &index, exec))
-			continue;
+			continue ;
 		else
 		{
 			handle_argument(&current, &arg_pos, tokenized, &index, argc);
-			if (pending_infile && current && current -> infile == 0)
+			if (pending_infile && current && current->infile == 0)
 			{
-				current -> infile = open(pending_infile, O_RDONLY);
+				current->infile = open(pending_infile, O_RDONLY);
 				pending_infile = NULL;
 			}
-			if (pending_outfile && current && current -> outfile == 1)
+			if (pending_outfile && current && current->outfile == 1)
 			{
-				current -> outfile = open(pending_outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+				current->outfile = open(pending_outfile,
+						O_WRONLY | O_CREAT | O_TRUNC, 0644);
 				pending_outfile = NULL;
 			}
 		}
 	}
 	if (cmds)
-		set_prev_fd(cmds);	
+		set_prev_fd(cmds);
 	return (cmds);
 }
