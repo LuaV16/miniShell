@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/25 12:21:31 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/25 15:55:02 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,7 +187,7 @@ void	free_context(t_exec exec, t_cmd *cmds, int exit_flags, char **tokenized)
 		free_resources(exec.cmd_paths);
 		exec.cmd_paths = NULL;
 	}
-	if (tokenized)
+	if (tokenized && tokenized != exec.cmd_paths)
 	{
 		free_resources(tokenized);
 		exec.cmd_paths = NULL;
@@ -321,7 +321,6 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized)
 		if (!exec -> cmd_paths || !exec -> cmd_paths[index])
 		{
 			printf("Command '%s' not found\n", cmd -> command);
-			free_context(*exec, cmd, 0, tokenized);
 			return (-1);
 		}
 	}
