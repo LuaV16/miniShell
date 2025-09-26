@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/25 12:38:11 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/26 13:29:19 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,10 @@ int	count_args(char **tokenized, int start)
 
 static t_cmd	*new_cmd(int argc)
 {
+	int		index;
 	t_cmd	*cmd;
 
+	index = 0;
 	cmd = malloc(sizeof(t_cmd));
 	if (!cmd)
 		return (NULL);
@@ -55,6 +57,8 @@ static t_cmd	*new_cmd(int argc)
 		free(cmd);
 		return (NULL);
 	}
+	while (index < (argc + 1))
+		cmd->args[index++] = NULL;
 	return (cmd);
 }
 
@@ -67,6 +71,9 @@ int	handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **last, int *arg_pos,
 	if (!tokenized[*index])
 		return (0);
 	if (!(tokenized[*index][0] == '|' && tokenized[*index][1] == '\0'))
+		return (0);
+	if (!tokenized[(*index + 1)] || (tokenized[(*index) + 1][0] == '|'
+			&& tokenized[(*index) + 1][1] == '\0'))
 		return (0);
 	argc = count_args(tokenized, (*index) + 1);
 	new_command = new_cmd(argc);
@@ -94,6 +101,8 @@ int	handle_out_redirection(t_cmd **current, char **tokenized, int *index)
 		return (0);
 	if (ft_strncmp(tokenized[*index], ">", ft_strlen(tokenized[*index])) == 0)
 	{
+		if (!tokenized[(*index + 1)])
+			return (0);
 		fd = open(tokenized[(*index) + 1], O_RDWR | O_CREAT, 0644);
 		if (*current)
 			(*current)->outfile = fd;
@@ -103,13 +112,12 @@ int	handle_out_redirection(t_cmd **current, char **tokenized, int *index)
 	return (0);
 }
 
-int	handle_in_redirection(t_cmd **current, char **tokenized, int *index,
-		t_cmd **cmds)
+int	handle_in_redirection(t_cmd **current, char **tokenized, int *index)
 {
 	int	fd;
 
-	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*cmds)
-		|| !(*cmds)->command)
+	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current)
+		|| !(*current)->command)
 		return (0);
 	if (ft_strncmp(tokenized[*index], "<", ft_strlen(tokenized[*index])) == 0)
 	{
@@ -117,7 +125,7 @@ int	handle_in_redirection(t_cmd **current, char **tokenized, int *index,
 		if (fd < 0)
 		{
 			perror("open infile");
-			exit(1);
+			exit(127);
 		}
 		(*current)->infile = fd;
 		(*index) += 2;
@@ -131,13 +139,23 @@ int	handle_dolar(char **tokenized, int *index, t_exec exec)
 	char	*env;
 	char	*var;
 	int		i;
+	char	*exit;
 
 	if (!tokenized[*index])
 		return (0);
 	if (exec.quote_type[*index] == 1)
 		return (0);
+	if (tokenized[*index][0] == '$' && tokenized[*index][1] == '?')
+	{
+		exit = ft_itoa(exec.exit);
+		free(tokenized[*index]);
+		tokenized[*index] = exit;
+	}
+	/* $_ expansion removed */
 	if (ft_strncmp(tokenized[*index], "$", ft_strlen(tokenized[*index])) == 0)
 	{
+		if (!tokenized[(*index) + 1])
+			return (0);
 		env = getenv(tokenized[(*index) + 1]);
 		free(tokenized[*index]);
 		if (env)
@@ -155,8 +173,11 @@ int	handle_dolar(char **tokenized, int *index, t_exec exec)
 	}
 	else if (tokenized[*index][0] == '$')
 	{
-		var = (char *)malloc(sizeof(char) * ft_strlen(tokenized[*index] + 1));
-		ft_strlcpy(var, tokenized[*index] + 1, ft_strlen(tokenized[*index]));
+		/* allocate varname (strlen without the leading $) + NUL */
+		var = malloc(ft_strlen(tokenized[*index] + 1) + 1);
+		if (!var)
+			return (0);
+		ft_strlcpy(var, tokenized[*index] + 1, ft_strlen(tokenized[*index] + 1) + 1);
 		env = getenv(var);
 		free(tokenized[*index]);
 		if (env)
@@ -184,18 +205,29 @@ void	set_prev_fd(t_cmd *cmds)
 void	handle_argument(t_cmd **current, int *arg_pos, char **tokenized,
 		int *index, int argc)
 {
-	if (is_special_char(tokenized[*index][0]))
-	{
-		(*index)++;
-		return ;
-	}
+	char	*tok;
+
 	if (!tokenized[*index])
 		return ;
+	if (is_special_char(tokenized[*index][0]))
+	{
+		if (tokenized[(*index) + 1])
+		{
+			(*index)++;
+			return ;
+		}
+	}
+	tok = tokenized[*index];
 	if (!(*current)->command && *arg_pos == 0)
-		(*current)->command = tokenized[*index];
+	{
+		(*current)->command = ft_strdup(tok);
+		if (!(*current)->command)
+			return ;
+	}
 	if (*arg_pos < argc)
 	{
-		(*current)->args[(*arg_pos)++] = tokenized[*index];
+		(*current)->args[(*arg_pos)] = ft_strdup(tok);
+		(*arg_pos)++;
 		(*current)->args[(*arg_pos)] = NULL;
 	}
 	(*index)++;
@@ -221,6 +253,34 @@ int	first_char_is_special(char **tokenized, int *index, char **pending_infile,
 		return (1);
 	}
 	return (0);
+}
+
+void	free_cmds(t_cmd *cmds)
+{
+	t_cmd	*current;
+	int		index;
+	t_cmd	*next;
+
+	current = cmds;
+	while (current)
+	{
+		index = 0;
+		if (current->command)
+			free(current->command);
+		if (current->args)
+			free_resources(current->args);
+		if (current->infile > 0)
+			close(current->infile);
+		if (current->outfile > 1)
+			close(current->outfile);
+		current = current->next;
+	}
+	while (cmds)
+	{
+		next = cmds->next;
+		free(cmds);
+		cmds = next;
+	}
 }
 t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 {
@@ -261,7 +321,7 @@ t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 		}
 		if (handle_pipe(&cmds, &current, &last, &arg_pos, tokenized, &index))
 			continue ;
-		else if (handle_in_redirection(&current, tokenized, &index, &cmds))
+		else if (handle_in_redirection(&current, tokenized, &index))
 			continue ;
 		else if (handle_out_redirection(&current, tokenized, &index))
 			continue ;
@@ -273,6 +333,11 @@ t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 			if (pending_infile && current && current->infile == 0)
 			{
 				current->infile = open(pending_infile, O_RDONLY);
+				if (current -> infile < 0)
+				{
+					perror("open infile");
+					exit(127);
+				}
 				pending_infile = NULL;
 			}
 			if (pending_outfile && current && current->outfile == 1)
@@ -283,6 +348,10 @@ t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 			}
 		}
 	}
+	if (pending_infile)
+		free(pending_infile);
+	if (pending_outfile)
+		free(pending_outfile);
 	if (cmds)
 		set_prev_fd(cmds);
 	return (cmds);

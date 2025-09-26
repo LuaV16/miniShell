@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 10:15:38 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/25 13:06:20 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/26 13:19:18 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,8 @@ int	quotes_count(char *rl, int *index, int *count)
 	if (rl[*index] == '"' || rl[*index] == '\'')
 	{
 		quote = rl[(*index)++];
-		null_content(rl[*index + 1], quote);
-		close_quotes(rl[*index + 1]);
+		null_content(rl[*index], quote);
+		close_quotes(rl[*index]);
 		while (rl[*index] && rl[*index] != quote)
 			(*index)++;
 		if (rl[*index] == quote)

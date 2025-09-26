@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/25 15:55:02 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/26 13:29:19 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,7 +112,10 @@ void	init_exec_struct(t_cmd *cmds, t_exec *exec, char **envp)
 	exec -> envp = envp;
 	exec -> pids = (pid_t*)malloc(sizeof(pid_t) * exec -> count_cmds);
 	if (!exec -> pids)
-		exit(EXIT_FAILURE);
+	{
+		exec->exit = 127;
+		exit(127);
+	}
 	exec -> cmd_paths = get_cmd_paths(*exec, cmds);
 }
 int	is_last(int index, t_exec exec)
@@ -127,7 +130,8 @@ void	init_pipe(t_exec *exec)
 	if (pipe(exec->pipefd) == -1)
 	{
 		perror("pipe error");
-		exit(EXIT_FAILURE);
+		exec -> exit = 127;
+		exit(127);
 	}
 }
 
@@ -178,27 +182,18 @@ void	free_context(t_exec exec, t_cmd *cmds, int exit_flags, char **tokenized)
 		current = current -> next;
 	}
 	if (exec.pids)
-	{
 		free(exec.pids);
-		exec.pids = NULL;
-	}
 	if (exec.cmd_paths)
-	{
 		free_resources(exec.cmd_paths);
-		exec.cmd_paths = NULL;
-	}
 	if (tokenized && tokenized != exec.cmd_paths)
-	{
 		free_resources(tokenized);
-		exec.cmd_paths = NULL;
-	}
 	if (exec.quote_type)
-	{
 		free(exec.quote_type);
-		exec.quote_type = NULL;
-	}
 	if (exit_flags > 0)
+	{
+		exec.exit = 127;
 		exit(127);
+	}
 }
 
 int	builtin_cd(t_cmd *cmd)
@@ -304,7 +299,14 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized)
 		if (is_last(index, *exec) &&  cmd -> infile <= 0 && cmd -> outfile <= 1 && cmd -> prev_fd <= 0)
 		{
 			status = exec_builtin(cmd);
-			(void)status;
+			exec->exit = status;
+			if (cmd->args)
+			{
+				int i = 0;
+				while (cmd->args[i])
+					i++;
+				/* last_arg feature removed */
+			}
 			return (-1);
 		}
 	}
@@ -313,15 +315,17 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized)
 	if (!cmd -> command)
 	{
 		printf("Command '%s' not found\n", cmd -> command);
+		exec -> exit = 127;
 		free_context(*exec, cmd, 0, tokenized);
-		return (-1);
+		return (127);
 	}
 	if (!is_builtin_name(cmd))
 	{
 		if (!exec -> cmd_paths || !exec -> cmd_paths[index])
 		{
 			printf("Command '%s' not found\n", cmd -> command);
-			return (-1);
+			exec->exit = 127;
+			return (127);
 		}
 	}
 	pid = fork();
@@ -330,14 +334,20 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized)
 		redirect_stdio(*exec, cmd, index);
 		clean_child(index, *exec, cmd);
 		if (is_builtin_name(cmd))
-			exit(exec_builtin(cmd));
+		{
+			status = exec_builtin(cmd);
+			exec->exit = status;
+			/* child should not set parent's last_arg; parent will set it */
+			exit(status);
+		}
 		exec_child(cmd, *exec, index);
 	}
 	else if(pid < 0)
 	{
 		perror("pid error");
 		free_context(*exec, exec->cmds, 0, tokenized);
-		exit(STDERR_FILENO);
+		exec -> exit = 127;
+		exit(127);
 	}
 	clean_parent(index, *exec, cmd);
 	return (pid);

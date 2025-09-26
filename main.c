@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/25 15:52:08 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/26 13:29:19 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,10 @@ int	main(int argc, char *argv[], char **envp)
 	t_cmd *current;
 	int index;
 	int status;
+
+	/* inicializar exit en exec */
+	exec.exit = 0;
+	/* last_arg feature removed */
 	(void)argc;
 	(void)argv;
 
@@ -83,16 +87,17 @@ int	main(int argc, char *argv[], char **envp)
 			free(rl);
 			continue ;
 		}
-
+		
 		tokenized = ft_token(rl, &exec);
-
+		
 		if (!tokenized)
 		{
 			free(rl);
 			continue ;
 		}
-
+		
 		cmds = add_to_struct(tokenized, exec);
+		init_exec_struct(cmds, &exec, envp);
 		if (!cmds)
 		{
 			// Liberar tokenized
@@ -104,60 +109,37 @@ int	main(int argc, char *argv[], char **envp)
 			continue ;
 		}
 
-		/* Liberar los tokens que NO fueron referenciados por add_to_struct.
-			Los tokens referenciados por cmds->args se liberarán al liberar cmds. */
-		{
-			int t = 0;
-			while (tokenized[t])
-			{
-				int used = 0;
-				t_cmd *c = cmds;
-				while (c && !used)
-				{
-					if (c->args)
-					{
-						int a = 0;
-						while (c->args[a])
-						{
-							if (c->args[a] == tokenized[t])
-							{
-								used = 1;
-								break ;
-							}
-							a++;
-						}
-					}
-					c = c->next;
-				}
-				if (!used)
-				{
-					free(tokenized[t]);
-					tokenized[t] = NULL;
-				}
-				t++;
-			}
-		}
+	/* tokenized strings will be freed together after execution */
 
-		init_exec_struct(cmds, &exec, envp);
 		current = exec.cmds;
 		index = 0;
 		while (current)
 		{
-			exec.pids[index] = fork_procces(index, &exec, current, tokenized);
+			pid_t rc = fork_procces(index, &exec, current, tokenized);
+			if (rc > 0)
+				exec.pids[index] = rc;
+			else
+				exec.pids[index] = -1;
+			/* preserve exit code on immediate errors */
+			if (rc == 127)
+				exec.exit = 127;
 			index++;
 			current = current->next;
 		}
 		index = 0;
 		while (index < exec.count_cmds)
 		{
-			waitpid(exec.pids[index], &status, 0);
+			if (exec.pids[index] > 0)
+			{
+				waitpid(exec.pids[index], &status, 0);
+				if (WIFEXITED(status))
+					exec.exit = WEXITSTATUS(status);
+			}
 			index++;
 		}
 
-		/* tokenized strings are referenced by cmds->args (no copia en add_to_struct),
-			so free only the tokenized array itself here to avoid double-free.
-			Individual strings will be freed when freeing cmds->args below. */
-		free(tokenized);
+	/* free tokenized array and its strings */
+	free_resources(tokenized);
 
 		if (exec.quote_type)
 		{
@@ -184,21 +166,8 @@ int	main(int argc, char *argv[], char **envp)
 
 		free(rl);
 
-		t_cmd *tmp;
-		while (cmds)
-		{
-			tmp = cmds->next;
-			/* liberar args individuales y el array args */
-			if (cmds->args)
-			{
-				int a = 0;
-				while (cmds->args[a])
-					free(cmds->args[a++]);
-				free(cmds->args);
-			}
-			free(cmds);
-			cmds = tmp;
-		}
+		if (cmds)
+			free_cmds(cmds);
 	}
 	return (0);
 }
