@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/26 13:29:19 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/26 15:58:25 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,10 +63,10 @@ static t_cmd	*new_cmd(int argc)
 }
 
 int	handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **last, int *arg_pos,
-		char **tokenized, int *index)
+		char **tokenized, int *p_argc, int *index)
 {
 	t_cmd	*new_command;
-	int		argc;
+    int		nargc;
 
 	if (!tokenized[*index])
 		return (0);
@@ -75,8 +75,8 @@ int	handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **last, int *arg_pos,
 	if (!tokenized[(*index + 1)] || (tokenized[(*index) + 1][0] == '|'
 			&& tokenized[(*index) + 1][1] == '\0'))
 		return (0);
-	argc = count_args(tokenized, (*index) + 1);
-	new_command = new_cmd(argc);
+	nargc = count_args(tokenized, (*index) + 1);
+	new_command = new_cmd(nargc);
 	if (!new_command)
 		return (0);
 	if (*current)
@@ -86,6 +86,8 @@ int	handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **last, int *arg_pos,
 	*last = new_command;
 	*current = new_command;
 	*arg_pos = 0;
+	if (p_argc)
+		*p_argc = nargc;
 	(*index)++;
 	return (1);
 }
@@ -319,7 +321,8 @@ t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 			}
 			arg_pos = 0;
 		}
-		if (handle_pipe(&cmds, &current, &last, &arg_pos, tokenized, &index))
+	if (handle_pipe(&cmds, &current, &last, &arg_pos, tokenized,
+		    &argc, &index))
 			continue ;
 		else if (handle_in_redirection(&current, tokenized, &index))
 			continue ;
