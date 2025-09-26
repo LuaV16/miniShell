@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/26 16:12:57 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/26 18:34:33 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,6 +58,23 @@ typedef struct	s_exec
 	int		exit;
 }				t_exec;
 
+typedef struct s_fill_ctx
+{
+	char	*rl;
+	int	*i;
+	char	**res;
+	int	*j;
+	int	*quote_type;
+}				t_fill_ctx;
+
+typedef struct	s_pipe_ctx
+{
+	int *arg_pos;
+	char **tok;
+	int *p_argc;
+	int *index;
+}				t_pipe_ctx;
+
 char							**ft_token(char *rl, t_exec *exec);
 t_cmd					*add_to_struct(char **tokenized, t_exec exec);
 void					init_exec_struct(t_cmd *cmds, t_exec *exec, char **envp);
@@ -66,4 +83,9 @@ void					free_resources(char **str);
 int						count_args(char **tokenized, int start);
 pid_t					fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized);
 void					free_cmds(t_cmd *cmds);
+int						first_char_is_special(char **tokenized, int *index,
+							char **pending_infile, char **pending_outfile);
+int						handle_dolar(char **tokenized, int *index, t_exec exec);
+void					handle_argument(t_cmd **current, t_pipe_ctx *ctx);
+void					set_prev_fd(t_cmd *cmds);
 #endif
