@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/26 18:34:28 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/27 13:45:34 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,8 @@ int	handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **last, t_pipe_ctx *ctx)
 		*cmds = new_command;
 	*last = new_command;
 	*current = new_command;
-	*(ctx->arg_pos) = 0;
+	if (ctx->arg_pos)
+		*(ctx->arg_pos) = 0;
 	if (ctx->p_argc)
 		*(ctx->p_argc) = count_args(ctx->tok, *(ctx->index) + 1);
 	(*(ctx->index))++;
@@ -91,18 +92,21 @@ int	handle_out_redirection(t_cmd **current, char **tokenized, int *index)
 {
 	int	fd;
 
-	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current)
-		|| !(*current)->command)
-		return (0);
-	if (!*current)
+	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current))
 		return (0);
 	if (ft_strncmp(tokenized[*index], ">", ft_strlen(tokenized[*index])) == 0)
 	{
 		if (!tokenized[(*index + 1)])
 			return (0);
-		fd = open(tokenized[(*index) + 1], O_RDWR | O_CREAT, 0644);
-		if (*current)
-			(*current)->outfile = fd;
+		fd = open(tokenized[(*index) + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		if (fd < 0)
+		{
+			perror(tokenized[(*index) + 1]);
+			(*current)->outfile = -1;
+			(*index) += 2;
+			return (1);
+		}
+		(*current)->outfile = fd;
 		(*index) += 2;
 		return (1);
 	}
@@ -113,16 +117,17 @@ int	handle_in_redirection(t_cmd **current, char **tokenized, int *index)
 {
 	int	fd;
 
-	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current)
-		|| !(*current)->command)
+	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current))
 		return (0);
 	if (ft_strncmp(tokenized[*index], "<", ft_strlen(tokenized[*index])) == 0)
 	{
 		fd = open(tokenized[(*index) + 1], O_RDONLY);
 		if (fd < 0)
 		{
-			perror("open infile");
-			exit(127);
+			perror(tokenized[(*index) + 1]);
+			(*current)->infile = -1;
+			(*index) += 2;
+			return (1);
 		}
 		(*current)->infile = fd;
 		(*index) += 2;
@@ -174,8 +179,8 @@ int	expand_dollar_var(char **tokenized, int *index)
 	var = malloc(ft_strlen(tokenized[*index] + 1) + 1);
 	if (!var)
 		return (0);
-	ft_strlcpy(var, tokenized[*index] + 1, ft_strlen(tokenized[*index] + 1)
-		+ 1);
+	ft_strlcpy(var, tokenized[*index] + 1,
+		ft_strlen(tokenized[*index] + 1) + 1);
 	env = getenv(var);
 	free(tokenized[*index]);
 	tokenized[*index] = env;
@@ -220,22 +225,19 @@ void	handle_argument(t_cmd **current, t_pipe_ctx *ctx)
 
 	if (!ctx->tok[*ctx->index])
 		return ;
-	if (is_special_char(ctx->tok[*ctx->index][0]))
-	{
-		if (ctx->tok[(*ctx->index) + 1])
-		{
-			(*(ctx->index))++;
-			return ;
-		}
-	}
 	tok = ctx->tok[*ctx->index];
 	if (!(*current)->command && *(ctx->arg_pos) == 0)
 	{
 		(*current)->command = ft_strdup(tok);
 		if (!(*current)->command)
 			return ;
+		(*current)->args[0] = ft_strdup(tok);
+		if (!(*current)->args[0])
+			return ;
+		*(ctx->arg_pos) = 1;
+		(*current)->args[1] = NULL;
 	}
-	if (*(ctx->arg_pos) < *(ctx->p_argc))
+	else if (*(ctx->arg_pos) < *(ctx->p_argc))
 	{
 		(*current)->args[*(ctx->arg_pos)] = ft_strdup(tok);
 		(*(ctx->arg_pos))++;
@@ -244,8 +246,8 @@ void	handle_argument(t_cmd **current, t_pipe_ctx *ctx)
 	(*(ctx->index))++;
 }
 
-int	first_char_is_special(char **tokenized, int *index, char **pending_infile,
-		char **pending_outfile)
+int	first_char_is_special(char **tokenized, int *index,
+		char **pending_infile, char **pending_outfile)
 {
 	if (tokenized[*index] && tokenized[*index + 1]
 		&& ft_strncmp(tokenized[*index], "<",
@@ -269,13 +271,11 @@ int	first_char_is_special(char **tokenized, int *index, char **pending_infile,
 void	free_cmds(t_cmd *cmds)
 {
 	t_cmd	*current;
-	int		index;
 	t_cmd	*next;
 
 	current = cmds;
 	while (current)
 	{
-		index = 0;
 		if (current->command)
 			free(current->command);
 		if (current->args)
@@ -294,81 +294,95 @@ void	free_cmds(t_cmd *cmds)
 	}
 }
 
+static int	leading_in(t_pipe_ctx *ctx, t_cmd **cmds, t_cmd **cur)
+{
+	int	fd;
+
+	if (*cur || !ctx->tok[*(ctx->index)] || !ctx->tok[*(ctx->index) + 1])
+		return (0);
+	if (ft_strncmp(ctx->tok[*(ctx->index)], "<", 1) != 0)
+		return (0);
+	*(ctx->p_argc) = count_args(ctx->tok, *(ctx->index));
+	*cur = new_cmd(*(ctx->p_argc));
+	if (!*cmds)
+		*cmds = *cur;
+	fd = open(ctx->tok[*(ctx->index) + 1], O_RDONLY);
+	if (fd < 0)
+	{
+		perror(ctx->tok[*(ctx->index) + 1]);
+		(*cur)->infile = -1;
+		*(ctx->index) += 2;
+		return (1);
+	}
+	(*cur)->infile = fd;
+	*(ctx->index) += 2;
+	return (1);
+}
+
+static int	leading_out(t_pipe_ctx *ctx, t_cmd **cmds, t_cmd **cur)
+{
+	int	fd;
+
+	if (*cur || !ctx->tok[*(ctx->index)] || !ctx->tok[*(ctx->index) + 1])
+		return (0);
+	if (ft_strncmp(ctx->tok[*(ctx->index)], ">", 1) != 0)
+		return (0);
+	*(ctx->p_argc) = count_args(ctx->tok, *(ctx->index));
+	*cur = new_cmd(*(ctx->p_argc));
+	if (!*cmds)
+		*cmds = *cur;
+	fd = open(ctx->tok[*(ctx->index) + 1],
+			O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	(*cur)->outfile = fd;
+	*(ctx->index) += 2;
+	return (1);
+}
+
+static int	do_step(t_cmd **cmds, t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
+{
+	if (!*current && (leading_in(ctx, cmds, current)
+			|| leading_out(ctx, cmds, current)))
+		return (1);
+	if (!*current)
+	{
+		*(ctx->p_argc) = count_args(ctx->tok, *(ctx->index));
+		*current = new_cmd(*(ctx->p_argc));
+		if (!*cmds)
+			*cmds = *current;
+		*(ctx->arg_pos) = 0;
+	}
+	if (handle_pipe(cmds, current, current, ctx)
+		|| handle_in_redirection(current, ctx->tok, ctx->index)
+		|| handle_out_redirection(current, ctx->tok, ctx->index)
+		|| handle_dolar(ctx->tok, ctx->index, exec))
+		return (1);
+	handle_argument(current, ctx);
+	return (1);
+}
+
 t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 {
-	int			index;
-	int			arg_pos;
 	t_cmd		*cmds;
 	t_cmd		*current;
-	t_cmd		*last;
-	char		*pending_infile;
-	char		*pending_outfile;
 	int			argc;
-	t_pipe_ctx	pipe_ctx;
+	int			arg_pos;
+	int			index;
+	t_pipe_ctx	ctx;
 
-	index = 0;
-	arg_pos = 0;
 	cmds = NULL;
 	current = NULL;
-	last = NULL;
-	pending_infile = NULL;
-	pending_outfile = NULL;
 	argc = 0;
+	arg_pos = 0;
+	index = 0;
 	if (!tokenized)
 		return (NULL);
+	ctx.arg_pos = &arg_pos;
+	ctx.tok = tokenized;
+	ctx.p_argc = &argc;
+	ctx.index = &index;
 	while (tokenized[index])
-	{
-		if (!current && first_char_is_special(tokenized, &index,
-				&pending_infile, &pending_outfile))
+		if (do_step(&cmds, &current, &ctx, exec))
 			continue ;
-		if (!(current))
-		{
-			argc = count_args(tokenized, index);
-			current = new_cmd(argc);
-			if (!(cmds))
-			{
-				cmds = current;
-				last = current;
-			}
-			arg_pos = 0;
-		}
-		pipe_ctx.arg_pos = &arg_pos;
-		pipe_ctx.tok = tokenized;
-		pipe_ctx.p_argc = &argc;
-		pipe_ctx.index = &index;
-		if (handle_pipe(&cmds, &current, &last, &pipe_ctx))
-			continue ;
-		else if (handle_in_redirection(&current, tokenized, &index))
-			continue ;
-		else if (handle_out_redirection(&current, tokenized, &index))
-			continue ;
-		else if (handle_dolar(tokenized, &index, exec))
-			continue ;
-		else
-		{
-			handle_argument(&current, &pipe_ctx);
-			if (pending_infile && current && current->infile == 0)
-			{
-				current->infile = open(pending_infile, O_RDONLY);
-				if (current->infile < 0)
-				{
-					perror("open infile");
-					exit(127);
-				}
-				pending_infile = NULL;
-			}
-			if (pending_outfile && current && current->outfile == 1)
-			{
-				current->outfile = open(pending_outfile,
-						O_WRONLY | O_CREAT | O_TRUNC, 0644);
-				pending_outfile = NULL;
-			}
-		}
-	}
-	if (pending_infile)
-		free(pending_infile);
-	if (pending_outfile)
-		free(pending_outfile);
 	if (cmds)
 		set_prev_fd(cmds);
 	return (cmds);

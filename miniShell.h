@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/26 18:34:33 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/09/27 13:46:42 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,8 @@ typedef struct	s_exec
 	char			**envp;
 	char			**cmd_paths;
 	int				*quote_type;
-	int		exit;
+	int				exit;
+	int				sticky_exit; // when set, keep exit code regardless of child statuses
 }				t_exec;
 
 typedef struct s_fill_ctx
