@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/27 13:46:42 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/08 13:29:44 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ typedef struct	s_pipe_ctx
 }				t_pipe_ctx;
 
 char							**ft_token(char *rl, t_exec *exec);
-t_cmd					*add_to_struct(char **tokenized, t_exec exec);
+t_cmd					*add_to_struct(char **tokenized, t_exec exec, t_pipe_ctx *ctx);
 void					init_exec_struct(t_cmd *cmds, t_exec *exec, char **envp);
 void					free_context(t_exec exec, t_cmd *cmds, int exit_flags, char **tokenized);
 void					free_resources(char **str);

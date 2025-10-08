@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/27 13:45:34 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/08 13:26:00 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -360,14 +360,13 @@ static int	do_step(t_cmd **cmds, t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
 	return (1);
 }
 
-t_cmd	*add_to_struct(char **tokenized, t_exec exec)
+t_cmd	*add_to_struct(char **tokenized, t_exec exec, t_pipe_ctx *ctx)
 {
 	t_cmd		*cmds;
 	t_cmd		*current;
 	int			argc;
 	int			arg_pos;
 	int			index;
-	t_pipe_ctx	ctx;
 
 	cmds = NULL;
 	current = NULL;
@@ -376,12 +375,12 @@ t_cmd	*add_to_struct(char **tokenized, t_exec exec)
 	index = 0;
 	if (!tokenized)
 		return (NULL);
-	ctx.arg_pos = &arg_pos;
-	ctx.tok = tokenized;
-	ctx.p_argc = &argc;
-	ctx.index = &index;
+	ctx -> arg_pos = &arg_pos;
+	ctx -> tok = tokenized;
+	ctx -> p_argc = &argc;
+	ctx -> index = &index;
 	while (tokenized[index])
-		if (do_step(&cmds, &current, &ctx, exec))
+		if (do_step(&cmds, &current, ctx, exec))
 			continue ;
 	if (cmds)
 		set_prev_fd(cmds);

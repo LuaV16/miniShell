@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   signals.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 15:39:00 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/21 22:55:53 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/10/08 13:34:59 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "miniShell.h"
 
-void sigint_handler(int signo)
+void	sigint_handler(int signo)
 {
 	(void)signo;
 	write(1, "\n", 1);
@@ -21,7 +21,7 @@ void sigint_handler(int signo)
 	rl_redisplay();
 }
 
-void sigint_setup(void)
+void	sigint_setup(void)
 {
 	struct sigaction	sa;
 

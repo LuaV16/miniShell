@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/27 14:21:21 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/08 13:34:12 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,11 +45,15 @@ char	*find_command(char **path, char *command)
 {
 	int		j;
 	char	*full_path;
+	size_t	path_len_j;
+	size_t	command_len;
 
 	j = 0;
+	command_len = ft_strlen(command);
 	while (path[j])
 	{
-		full_path = malloc(sizeof(char) * (ft_strlen(path[j]) + ft_strlen(command) + 2));
+		path_len_j = ft_strlen(path[j]);
+		full_path = malloc(sizeof(char) * (path_len_j + command_len + 2));
 		ft_strlcpy(full_path, path[j], ft_strlen(path[j]) + 2);
 		ft_strlcat(full_path, "/", ft_strlen(path[j]) + 2);
 		ft_strlcat(full_path, command,
@@ -331,7 +335,7 @@ static int	handle_builtin_direct(t_exec *exec, t_cmd *cmd, int idx)
 
 static void	prin_cmd_not_found(char *name)
 {
-	char *message;
+	char	*message;
 
 	message = ": Command not found\n";
 	write(2, name, ft_strlen(name));

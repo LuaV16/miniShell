@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/09/27 14:02:21 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/08 13:34:31 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,14 +127,15 @@ static void	cleanup_exec(t_exec *exec)
 
 static int	process_tokens(char *rl, t_exec *exec, char **envp)
 {
-	char	**tokenized;
-	t_cmd	*cmds;
+	char		**tokenized;
+	t_cmd		*cmds;
+	t_pipe_ctx	ctx;
 
 	exec->sticky_exit = 0;
 	tokenized = ft_token(rl, exec);
 	if (!tokenized)
 		return (0);
-	cmds = add_to_struct(tokenized, *exec);
+	cmds = add_to_struct(tokenized, *exec, &ctx);
 	init_exec_struct(cmds, exec, envp);
 	exec->cmds = cmds;
 	if (!cmds)

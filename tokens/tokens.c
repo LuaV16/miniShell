@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 10:15:38 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/09/26 16:23:53 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/08 13:22:00 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,19 +26,42 @@ int	is_special_char(char c)
 	return (0);
 }
 
-int	quotes_count(char *rl, int *index, int *count)
+void	process_quote_token(char *rl, int *index, int *has_quotes)
 {
 	char	quote;
 
-	if (rl[*index] == '"' || rl[*index] == '\'')
+	while (rl[*index] && (rl[*index] == '"' || rl[*index] == '\''
+			|| (!is_space(rl[*index]) && !is_special_char(rl[*index]))))
 	{
-		quote = rl[(*index)++];
-		null_content(rl[*index], quote);
-		close_quotes(rl[*index]);
-		while (rl[*index] && rl[*index] != quote)
-			(*index)++;
-		if (rl[*index] == quote)
-			(*index)++;
+		if (rl[*index] == '"' || rl[*index] == '\'')
+		{
+			quote = rl[(*index)++];
+			*has_quotes = 1;
+			null_content(rl[*index], quote);
+			close_quotes(rl[*index]);
+			while (rl[*index] && rl[*index] != quote)
+				(*index)++;
+			if (rl[*index] == quote)
+				(*index)++;
+		}
+		else
+		{
+			while (rl[*index] && !is_space(rl[*index])
+				&& rl[*index] != '"'
+				&& rl[*index] != '\'' && !is_special_char(rl[*index]))
+				(*index)++;
+		}
+	}
+}
+
+int	quotes_count(char *rl, int *index, int *count)
+{
+	int		has_quotes;
+
+	has_quotes = 0;
+	process_quote_token(rl, index, &has_quotes);
+	if (has_quotes)
+	{
 		(*count)++;
 		return (1);
 	}
@@ -84,27 +107,123 @@ int	count_words(char *rl)
 	return (count);
 }
 
+int	mix_quotes(char *fill)
+{
+	int		index;
+	char	quote;
+	char	other_quote;
+
+	index = 0;
+	while (fill[index])
+	{
+		quote = fill[index];
+		if (quote == '"')
+			other_quote = '\'';
+		else
+			other_quote = '"';
+		while (fill[index] && fill[index] != quote)
+		{
+			if (fill[index] == other_quote)
+				return (1);
+			index++;
+		}
+		if (fill[index] == quote)
+			index++;
+		else
+			index++;
+	}
+	return (0);
+}
+
+void	process_clean_quotes(char *result, char *fill, int *index, int *j)
+{
+	int		in_quotes;
+	char	quote;
+
+	in_quotes = 0;
+	quote = 0;
+	if ((fill[*index] == '"' || fill[*index] == '\'') && !in_quotes)
+	{
+		quote = fill[*index];
+		in_quotes = 1;
+		(*index)++;
+	}
+	else if (fill[*index] == quote && in_quotes)
+	{
+		in_quotes = 0;
+		quote = 0;
+		(*index)++;
+	}
+	else
+	{
+		result[*j] = fill[*index];
+		(*index)++;
+		(*j)++;
+	}
+}
+
+char	*remove_quotes(char *fill)
+{
+	int		index;
+	char	*result;
+	int		j;
+
+	if (mix_quotes(fill))
+		return (ft_strdup(fill));
+	result = (char *)malloc((ft_strlen(fill) + 1) * sizeof(char));
+	index = 0;
+	j = 0;
+	while (fill[index] && fill[index + 1])
+		process_clean_quotes(result, fill, &index, &j);
+	result[j] = '\0';
+	return (result);
+}
+
+void	process_quote_segment(t_fill_ctx *c, char *quote, int *has_quote)
+{
+	while (c->rl[*(c->i)]
+		&& (c->rl[*(c->i)] == '"' || c->rl[*(c->i)] == '\''
+			|| (!is_space(c->rl[*(c->i)])
+				&& !is_special_char(c->rl[*(c->i)]) && *has_quote)))
+	{
+		if (c->rl[*(c->i)] == '"' || c->rl[*(c->i)] == '\'')
+		{
+			*quote = c->rl[(*(c->i))++];
+			*has_quote = 1;
+			while (c->rl[*(c->i)] && c->rl[*(c->i)] != *quote)
+				(*(c->i))++;
+			if (c->rl[*(c->i)] == *quote)
+				(*(c->i))++;
+		}
+		else
+		{
+			while (c->rl[*(c->i)]
+				&& !is_space(c->rl[*(c->i)]) && c->rl[*(c->i)] != '"'
+				&& c->rl[*(c->i)] != '\'' && !is_special_char(c->rl[*(c->i)]))
+				(*(c->i))++;
+		}
+	}
+}
+
 int	fill_quotes(t_fill_ctx *ctx)
 {
 	t_fill_ctx	*c;
 	char		quote;
 	int			start;
+	int			has_quotes;
+	char		*fill;
 
+	has_quotes = 0;
 	c = ctx;
-	if (c->rl[*(c->i)] == '"' || c->rl[*(c->i)] == '\'')
+	start = *(c->i);
+	process_quote_segment(c, &quote, &has_quotes);
+	if (has_quotes)
 	{
-		quote = c->rl[(*(c->i))++];
-		start = *(c->i);
-		while (c->rl[*(c->i)] && c->rl[*(c->i)] != quote)
-			(*(c->i))++;
-		c->res[*(c->j)] = ft_substr(c->rl, start, *(c->i) - start);
-		if (quote == '"')
-			c->quote_type[*(c->j)] = 2;
-		else
-			c->quote_type[*(c->j)] = 1;
+		fill = ft_substr(c->rl, start, *(c->i) - start);
+		c -> res[*(c->j)] = remove_quotes(fill);
+		free(fill);
+		c->quote_type[*(c->j)] = 2;
 		(*(c->j))++;
-		if (c->rl[*(c->i)] == quote)
-			(*(c->i))++;
 		return (1);
 	}
 	return (0);
