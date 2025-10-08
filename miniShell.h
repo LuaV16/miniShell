@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/08 13:29:44 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/08 14:38:21 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,8 @@ typedef struct	s_cmd
 	int				outfile;
 	int				prev_fd;
 	struct s_cmd	*next;
+	int				heredoc_fd;
+	char			*heredoc_lim;
 }				t_cmd;
 
 typedef struct	s_exec
@@ -88,5 +90,6 @@ int						first_char_is_special(char **tokenized, int *index,
 							char **pending_infile, char **pending_outfile);
 int						handle_dolar(char **tokenized, int *index, t_exec exec);
 void					handle_argument(t_cmd **current, t_pipe_ctx *ctx);
+int						is_space(char c);
 void					set_prev_fd(t_cmd *cmds);
 #endif

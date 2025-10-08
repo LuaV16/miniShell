@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/08 13:26:00 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/08 14:43:42 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,16 +22,19 @@ int	count_args(char **tokenized, int start)
 		if (tokenized[start][0] == '|')
 			break ;
 		if ((tokenized[start][0] == '<' || tokenized[start][0] == '>')
-			&& tokenized[start][1] == '\0')
+			&& tokenized[start][1] == '\0' && tokenized[start + 1])
 		{
-			if (tokenized[start + 1])
-			{
-				start += 2;
-				continue ;
-			}
+			start += 2;
+			continue ;
 		}
-		start++;
+		if ((tokenized[start][0] == '<' || tokenized[start][1] == '<')
+			&& tokenized[start][2] == '\0' && tokenized[start + 1])
+		{
+			start += 2;
+			continue ;
+		}
 		count++;
+		start++;
 	}
 	return (count);
 }
@@ -52,6 +55,8 @@ static t_cmd	*new_cmd(int argc)
 	cmd->command = NULL;
 	cmd->next = NULL;
 	cmd->args = malloc(sizeof(char *) * (argc + 1));
+	cmd -> heredoc_fd = -1;
+	cmd -> heredoc_lim = NULL;
 	if (!cmd->args)
 	{
 		free(cmd);
@@ -136,6 +141,84 @@ int	handle_in_redirection(t_cmd **current, char **tokenized, int *index)
 	return (0);
 }
 
+char	*get_env_name(char *line)
+{
+	int		index;
+	int		j;
+	char	*env_name;
+
+	env_name = malloc(ft_strlen(line));
+	index = 0;
+	while (line[index])
+	{
+		if (line[index] == '$' )
+		{
+			index++;
+			while (line[index + 1] != '\0' || !is_space(line[index + 1]))
+			{
+				env_name[j] = line[index];
+				index++;
+				j++;
+			}
+		}
+		index++;
+	}
+	env_name[j] = '\0';
+	return (env_name);
+}
+
+int	build_heredoc(char *lim)
+{
+	int		fd[2];
+	char	*line;
+	char	*env;
+
+	if (pipe(fd) < 0)
+		return (-1);
+	while (1)
+	{
+		line = readline(">");
+		if (!line || ft_strncmp(line, lim, ft_strlen(lim) + 1) == 0)
+		{
+			free(line);
+			break;
+		}
+		env = get_env_name(line);
+		write(fd[1], line, ft_strlen(line));
+		write(fd[1], "\n", 1);
+		free(line);
+	}
+	close(fd[1]);
+	return (fd[0]);
+}
+
+int	handel_heredoc(t_cmd **current, char **tokenized, int *index)
+{
+	int	fd;
+
+	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current))
+		return (0);
+	if (tokenized[*index][0] == '<' && tokenized[*index][1] == '<')
+	{
+		fd = build_heredoc(tokenized[*index + 1]);
+		if (fd < 0)
+			(*current)->infile = -1;
+		else
+		{
+			if ((*current) -> heredoc_fd > 0)
+			close((*current) -> infile);
+			if ((*current) -> heredoc_lim)
+			free((*current) -> heredoc_lim);
+			(*current) -> heredoc_fd = fd;
+			(*current) -> heredoc_lim = ft_strdup(tokenized[*index + 1]);
+			(*current) -> infile = fd;
+		}
+		*index += 2;
+		return (1);
+	}
+	return (0);
+}
+
 int	replace_exit_code(char **tokenized, int *index, t_exec exec)
 {
 	char	*exit_s;
@@ -176,11 +259,11 @@ int	expand_dollar_var(char **tokenized, int *index)
 	char	*var;
 	char	*env;
 
-	var = malloc(ft_strlen(tokenized[*index] + 1) + 1);
+	var = malloc(ft_strlen(tokenized[*index]));
 	if (!var)
 		return (0);
 	ft_strlcpy(var, tokenized[*index] + 1,
-		ft_strlen(tokenized[*index] + 1) + 1);
+		ft_strlen(tokenized[*index]));
 	env = getenv(var);
 	free(tokenized[*index]);
 	tokenized[*index] = env;
@@ -280,6 +363,8 @@ void	free_cmds(t_cmd *cmds)
 			free(current->command);
 		if (current->args)
 			free_resources(current->args);
+		if (current -> heredoc_lim)
+			free(current -> heredoc_lim);
 		if (current->infile > 0)
 			close(current->infile);
 		if (current->outfile > 1)
@@ -352,6 +437,7 @@ static int	do_step(t_cmd **cmds, t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
 		*(ctx->arg_pos) = 0;
 	}
 	if (handle_pipe(cmds, current, current, ctx)
+		|| handel_heredoc(current, ctx -> tok, ctx -> index)
 		|| handle_in_redirection(current, ctx->tok, ctx->index)
 		|| handle_out_redirection(current, ctx->tok, ctx->index)
 		|| handle_dolar(ctx->tok, ctx->index, exec))
