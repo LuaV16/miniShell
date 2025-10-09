@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   miniShell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/08 14:38:21 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/09 20:12:26 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,6 @@ void							null_content(char c, char quote);
 void							close_quotes(char c);
 void 	sigint_setup(void);
 void	sigquit_setup(void);
-int	is_special_char(char c);
-
 
 typedef struct	s_cmd
 {
@@ -92,4 +90,10 @@ int						handle_dolar(char **tokenized, int *index, t_exec exec);
 void					handle_argument(t_cmd **current, t_pipe_ctx *ctx);
 int						is_space(char c);
 void					set_prev_fd(t_cmd *cmds);
+int	is_special_char(char c);
+int check_valid_identifier(char *s);
+char **dup_envp(char **envp);
+int builtin_export(t_cmd *cmd, t_exec *exec);
+void add_or_replace_envp(t_exec *exec, char *entry);
+
 #endif

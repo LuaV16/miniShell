@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_exec_struct.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/08 13:34:12 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/09 20:04:34 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -268,12 +268,12 @@ int	is_builtin_name(t_cmd *cmds)
 		return (1);
 	else if (ft_strncmp(cmds -> command, "echo", 5) == 0)
 		return (1);
-	/*else if (ft_strncmp(cmds -> command, "export", 7) == 0)
-		return (1);*/
+	else if (ft_strncmp(cmds -> command, "export", 7) == 0)
+		return (1);
 	return (0);
 }
 
-int	exec_builtin(t_cmd *cmd)
+int	exec_builtin(t_cmd *cmd, t_exec *exec)
 {
 	if (ft_strncmp(cmd -> command, "cd", 3) == 0)
 		return (builtin_cd(cmd));
@@ -281,6 +281,8 @@ int	exec_builtin(t_cmd *cmd)
 		return (builtin_pwd());
 	else if (ft_strncmp(cmd -> command, "echo", 5) == 0)
 		return (builtin_echo(cmd));
+	else if (ft_strncmp(cmd -> command, "export", 7) == 0)
+		return (builtin_export(cmd, exec));
 	return (0);
 }
 
@@ -322,7 +324,7 @@ static int	handle_builtin_direct(t_exec *exec, t_cmd *cmd, int idx)
 	if (!is_last(idx, *exec) || cmd->infile > 0
 		|| cmd->outfile > 1 || cmd->prev_fd > 0)
 		return (0);
-	status = exec_builtin(cmd);
+	status = exec_builtin(cmd, exec);
 	exec->exit = status;
 	if (cmd->args)
 	{
@@ -375,7 +377,7 @@ static void	exec_child_process(t_exec *exec, t_cmd *cmd, int idx)
 	clean_child(idx, *exec, cmd);
 	if (is_builtin_name(cmd))
 	{
-		status = exec_builtin(cmd);
+		status = exec_builtin(cmd, exec);
 		exec->exit = status;
 		exit(status);
 	}

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/08 13:34:31 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/09 20:37:29 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,6 +168,7 @@ int	main(int argc, char *argv[], char **envp)
 	(void)argc;
 	(void)argv;
 	init_shell(&exec);
+	exec.envp = dup_envp(envp);
 	while (1)
 	{
 		rl = readline("miniShell$> ");
@@ -183,5 +184,7 @@ int	main(int argc, char *argv[], char **envp)
 		}
 		free(rl);
 	}
+	if (exec.envp)
+        free_resources(exec.envp);
 	return (exec.exit);
 }

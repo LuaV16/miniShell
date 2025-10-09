@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   add_to_struct.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/08 14:43:42 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/09 20:03:22 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,7 +171,7 @@ int	build_heredoc(char *lim)
 {
 	int		fd[2];
 	char	*line;
-	char	*env;
+	//char	*env;
 
 	if (pipe(fd) < 0)
 		return (-1);
@@ -183,7 +183,7 @@ int	build_heredoc(char *lim)
 			free(line);
 			break;
 		}
-		env = get_env_name(line);
+		//env = get_env_name(line);
 		write(fd[1], line, ft_strlen(line));
 		write(fd[1], "\n", 1);
 		free(line);
