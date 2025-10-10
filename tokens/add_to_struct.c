@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   add_to_struct.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/09 20:03:22 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/10/10 10:40:58 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,36 +141,52 @@ int	handle_in_redirection(t_cmd **current, char **tokenized, int *index)
 	return (0);
 }
 
-char	*get_env_name(char *line)
+t_exec	create_heredoc_exec(t_exec exec)
 {
-	int		index;
-	int		j;
-	char	*env_name;
-
-	env_name = malloc(ft_strlen(line));
-	index = 0;
-	while (line[index])
-	{
-		if (line[index] == '$' )
-		{
-			index++;
-			while (line[index + 1] != '\0' || !is_space(line[index + 1]))
-			{
-				env_name[j] = line[index];
-				index++;
-				j++;
-			}
-		}
-		index++;
-	}
-	env_name[j] = '\0';
-	return (env_name);
+	t_exec	temp_exec;
+	
+	temp_exec.quote_type = malloc(sizeof(int) * 2);
+	if (!temp_exec.quote_type)
+		return (exec);
+	temp_exec.quote_type[0] = 0;
+	temp_exec.quote_type[1] = 0;
+	return (temp_exec);
 }
 
-int	build_heredoc(char *lim)
+char	*expnad_heredoc_line(char *line, t_exec exec)
+{
+	char	**line_tokens;
+	char	*expanded;
+	int		i;
+	t_exec	temp_exec;
+
+	line_tokens = malloc(sizeof(char *) * 2);
+	if (!line_tokens)
+		return (ft_strdup(line));
+	line_tokens[0] = ft_strdup(line);
+	line_tokens[1] = NULL;
+	temp_exec = exec;
+	temp_exec = create_heredoc_exec(exec);
+	if (!temp_exec.quote_type)
+	{
+		free_resources(line_tokens);
+		return (ft_strdup(line));
+	}
+	i = 0;
+	handle_dolar(line_tokens, &i, temp_exec);
+	expanded = ft_strdup(line_tokens[0]);
+	free(temp_exec.quote_type);
+	free_resources(line_tokens);
+	if (expanded)
+		return(expanded);
+	return(ft_strdup(line));
+}
+
+int	build_heredoc(char *lim, t_exec exec)
 {
 	int		fd[2];
 	char	*line;
+	char	*expanded;
 	//char	*env;
 
 	if (pipe(fd) < 0)
@@ -183,16 +199,17 @@ int	build_heredoc(char *lim)
 			free(line);
 			break;
 		}
-		//env = get_env_name(line);
-		write(fd[1], line, ft_strlen(line));
+		expanded = expnad_heredoc_line(line, exec);
+		write(fd[1], expanded, ft_strlen(expanded));
 		write(fd[1], "\n", 1);
+		free(expanded);
 		free(line);
 	}
 	close(fd[1]);
 	return (fd[0]);
 }
 
-int	handel_heredoc(t_cmd **current, char **tokenized, int *index)
+int	handel_heredoc(t_cmd **current, char **tokenized, int *index, t_exec exec)
 {
 	int	fd;
 
@@ -200,7 +217,7 @@ int	handel_heredoc(t_cmd **current, char **tokenized, int *index)
 		return (0);
 	if (tokenized[*index][0] == '<' && tokenized[*index][1] == '<')
 	{
-		fd = build_heredoc(tokenized[*index + 1]);
+		fd = build_heredoc(tokenized[*index + 1], exec);
 		if (fd < 0)
 			(*current)->infile = -1;
 		else
@@ -266,7 +283,6 @@ int	expand_dollar_var(char **tokenized, int *index)
 		ft_strlen(tokenized[*index]));
 	env = getenv(var);
 	free(tokenized[*index]);
-	tokenized[*index] = env;
 	if (env)
 		tokenized[*index] = ft_strdup(env);
 	else
@@ -437,7 +453,7 @@ static int	do_step(t_cmd **cmds, t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
 		*(ctx->arg_pos) = 0;
 	}
 	if (handle_pipe(cmds, current, current, ctx)
-		|| handel_heredoc(current, ctx -> tok, ctx -> index)
+		|| handel_heredoc(current, ctx -> tok, ctx -> index, exec)
 		|| handle_in_redirection(current, ctx->tok, ctx->index)
 		|| handle_out_redirection(current, ctx->tok, ctx->index)
 		|| handle_dolar(ctx->tok, ctx->index, exec))

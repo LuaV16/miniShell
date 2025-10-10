@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/09 20:37:29 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/10/10 10:56:28 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,6 +123,11 @@ static void	cleanup_exec(t_exec *exec)
 		free(exec->pids);
 		exec->pids = NULL;
 	}
+	if (exec->envp)
+	{
+		free_resources(exec->envp);
+		exec->envp = NULL;
+	}
 }
 
 static int	process_tokens(char *rl, t_exec *exec, char **envp)
@@ -168,7 +173,7 @@ int	main(int argc, char *argv[], char **envp)
 	(void)argc;
 	(void)argv;
 	init_shell(&exec);
-	exec.envp = dup_envp(envp);
+	exec.envp = NULL;
 	while (1)
 	{
 		rl = readline("miniShell$> ");

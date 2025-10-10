@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_exec_struct.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/09 20:04:34 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/10/10 10:53:05 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,7 @@ void	init_exec_struct(t_cmd *cmds, t_exec *exec, char **envp)
 {
 	exec -> cmds = cmds;
 	exec -> count_cmds = cmds_size(exec -> cmds);
-	exec -> envp = envp;
+	exec -> envp = dup_envp(envp);
 	exec -> pids = (pid_t *)malloc(sizeof(pid_t) * exec -> count_cmds);
 	if (!exec -> pids)
 	{
@@ -200,6 +200,8 @@ void	free_context(t_exec exec, t_cmd *cmds, int exit_flags, char **tokenized)
 		free_resources(tokenized);
 	if (exec.quote_type)
 		free(exec.quote_type);
+	if (exec.envp)
+		free_resources(exec.envp);
 	if (exit_flags > 0)
 	{
 		exec.exit = 127;

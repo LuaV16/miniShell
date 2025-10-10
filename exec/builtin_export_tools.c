@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_export_tools.c                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/09 19:35:37 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/09 20:11:30 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/10/10 10:50:26 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,12 +61,13 @@ void new_env(t_exec *exec, char *entry, int *i)
     *i = 0;
     while (exec->envp && exec->envp[*i])
     {
-        newenv[*i] = exec->envp[*i];
+        newenv[*i] = ft_strdup(exec->envp[*i]);
         (*i)++;
     }
     newenv[(*i)++] = ft_strdup(entry);
     newenv[*i] = NULL;
-    free(exec->envp);
+    if (exec -> envp)
+        free_resources(exec->envp);
     exec->envp = newenv;
 }
 
