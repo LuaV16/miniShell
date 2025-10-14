@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/14 13:54:10 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/14 15:01:48 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,6 +190,6 @@ int	main(int argc, char *argv[], char **envp)
 		free(rl);
 	}
 	if (exec.envp)
-        free_resources(exec.envp);
+		free_resources(exec.envp);
 	return (exec.exit);
 }

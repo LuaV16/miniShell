@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/14 14:02:40 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/14 15:10:57 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,20 +190,30 @@ char	*expnad_heredoc_line(char *line, t_exec exec, int has_quotes)
 	return (ft_strdup(line));
 }
 
+static void	set_heredoc_fd(t_cmd *current, int fd, char *lim)
+{
+	if (fd < 0)
+		current->infile = -1;
+	else
+	{
+		if (current->heredoc_fd > 0)
+			close(current->infile);
+		if (current->heredoc_lim)
+			free(current->heredoc_lim);
+		current->heredoc_fd = fd;
+		current->heredoc_lim = ft_strdup(lim);
+		current->infile = fd;
+	}
+}
 
-int	build_heredoc(char *lim, t_exec exec)
+int	build_heredoc(char *lim, t_exec exec, int has_quotes)
 {
 	int		fd[2];
 	char	*line;
-	int		has_quotes;
 	char	*expanded;
 
-	printf("LIM: %i", exec.quote_type[0]);
-	has_quotes = exec.quote_type[0];
 	if (pipe(fd) < 0)
-	{
 		return (-1);
-	}
 	while (1)
 	{
 		line = readline(">");
@@ -228,24 +238,17 @@ int	build_heredoc(char *lim, t_exec exec)
 int	handel_heredoc(t_cmd **current, char **tokenized, int *index, t_exec exec)
 {
 	int	fd;
+	int	has_quotes;
 
 	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current))
 		return (0);
 	if (tokenized[*index][0] == '<' && tokenized[*index][1] == '<')
 	{
-		fd = build_heredoc(tokenized[*index + 1], exec);
-		if (fd < 0)
-			(*current)->infile = -1;
-		else
-		{
-			if ((*current)->heredoc_fd > 0)
-				close((*current)->infile);
-			if ((*current)->heredoc_lim)
-				free((*current)->heredoc_lim);
-			(*current)->heredoc_fd = fd;
-			(*current)->heredoc_lim = ft_strdup(tokenized[*index + 1]);
-			(*current)->infile = fd;
-		}
+		has_quotes = 0;
+		if (exec.quote_type)
+			has_quotes = exec.quote_type[*index + 1];
+		fd = build_heredoc(tokenized[*index + 1], exec, has_quotes);
+		set_heredoc_fd(*current, fd, tokenized[*index + 1]);
 		*index += 2;
 		return (1);
 	}
