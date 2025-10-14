@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 10:15:38 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/08 13:22:00 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/14 11:36:01 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,7 +222,12 @@ int	fill_quotes(t_fill_ctx *ctx)
 		fill = ft_substr(c->rl, start, *(c->i) - start);
 		c -> res[*(c->j)] = remove_quotes(fill);
 		free(fill);
-		c->quote_type[*(c->j)] = 2;
+		if (quote == '"')
+			c->quote_type[*(c->j)] = 2;
+		else if (quote == '\'')
+			c->quote_type[*(c->j)] = 1;
+		else
+			c->quote_type[*(c->j)] = 0;
 		(*(c->j))++;
 		return (1);
 	}

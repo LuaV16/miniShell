@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/10 10:40:58 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/14 14:02:40 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,8 +55,8 @@ static t_cmd	*new_cmd(int argc)
 	cmd->command = NULL;
 	cmd->next = NULL;
 	cmd->args = malloc(sizeof(char *) * (argc + 1));
-	cmd -> heredoc_fd = -1;
-	cmd -> heredoc_lim = NULL;
+	cmd->heredoc_fd = -1;
+	cmd->heredoc_lim = NULL;
 	if (!cmd->args)
 	{
 		free(cmd);
@@ -141,19 +141,28 @@ int	handle_in_redirection(t_cmd **current, char **tokenized, int *index)
 	return (0);
 }
 
-t_exec	create_heredoc_exec(t_exec exec)
+t_exec	create_heredoc_exec(t_exec exec, int has_quotes)
 {
 	t_exec	temp_exec;
-	
+
+	temp_exec = exec;
 	temp_exec.quote_type = malloc(sizeof(int) * 2);
 	if (!temp_exec.quote_type)
 		return (exec);
-	temp_exec.quote_type[0] = 0;
-	temp_exec.quote_type[1] = 0;
+	if (has_quotes)
+	{
+		temp_exec.quote_type[0] = 1;
+		temp_exec.quote_type[1] = 1;
+	}
+	else
+	{
+		temp_exec.quote_type[0] = 0;
+		temp_exec.quote_type[1] = 0;
+	}
 	return (temp_exec);
 }
 
-char	*expnad_heredoc_line(char *line, t_exec exec)
+char	*expnad_heredoc_line(char *line, t_exec exec, int has_quotes)
 {
 	char	**line_tokens;
 	char	*expanded;
@@ -165,8 +174,7 @@ char	*expnad_heredoc_line(char *line, t_exec exec)
 		return (ft_strdup(line));
 	line_tokens[0] = ft_strdup(line);
 	line_tokens[1] = NULL;
-	temp_exec = exec;
-	temp_exec = create_heredoc_exec(exec);
+	temp_exec = create_heredoc_exec(exec, has_quotes);
 	if (!temp_exec.quote_type)
 	{
 		free_resources(line_tokens);
@@ -178,28 +186,36 @@ char	*expnad_heredoc_line(char *line, t_exec exec)
 	free(temp_exec.quote_type);
 	free_resources(line_tokens);
 	if (expanded)
-		return(expanded);
-	return(ft_strdup(line));
+		return (expanded);
+	return (ft_strdup(line));
 }
+
 
 int	build_heredoc(char *lim, t_exec exec)
 {
 	int		fd[2];
 	char	*line;
+	int		has_quotes;
 	char	*expanded;
-	//char	*env;
 
+	printf("LIM: %i", exec.quote_type[0]);
+	has_quotes = exec.quote_type[0];
 	if (pipe(fd) < 0)
+	{
 		return (-1);
+	}
 	while (1)
 	{
 		line = readline(">");
 		if (!line || ft_strncmp(line, lim, ft_strlen(lim) + 1) == 0)
 		{
 			free(line);
-			break;
+			break ;
 		}
-		expanded = expnad_heredoc_line(line, exec);
+		if (has_quotes)
+			expanded = ft_strdup(line);
+		else
+			expanded = expnad_heredoc_line(line, exec, 0);
 		write(fd[1], expanded, ft_strlen(expanded));
 		write(fd[1], "\n", 1);
 		free(expanded);
@@ -222,13 +238,13 @@ int	handel_heredoc(t_cmd **current, char **tokenized, int *index, t_exec exec)
 			(*current)->infile = -1;
 		else
 		{
-			if ((*current) -> heredoc_fd > 0)
-			close((*current) -> infile);
-			if ((*current) -> heredoc_lim)
-			free((*current) -> heredoc_lim);
-			(*current) -> heredoc_fd = fd;
-			(*current) -> heredoc_lim = ft_strdup(tokenized[*index + 1]);
-			(*current) -> infile = fd;
+			if ((*current)->heredoc_fd > 0)
+				close((*current)->infile);
+			if ((*current)->heredoc_lim)
+				free((*current)->heredoc_lim);
+			(*current)->heredoc_fd = fd;
+			(*current)->heredoc_lim = ft_strdup(tokenized[*index + 1]);
+			(*current)->infile = fd;
 		}
 		*index += 2;
 		return (1);
@@ -279,8 +295,7 @@ int	expand_dollar_var(char **tokenized, int *index)
 	var = malloc(ft_strlen(tokenized[*index]));
 	if (!var)
 		return (0);
-	ft_strlcpy(var, tokenized[*index] + 1,
-		ft_strlen(tokenized[*index]));
+	ft_strlcpy(var, tokenized[*index] + 1, ft_strlen(tokenized[*index]));
 	env = getenv(var);
 	free(tokenized[*index]);
 	if (env)
@@ -345,8 +360,8 @@ void	handle_argument(t_cmd **current, t_pipe_ctx *ctx)
 	(*(ctx->index))++;
 }
 
-int	first_char_is_special(char **tokenized, int *index,
-		char **pending_infile, char **pending_outfile)
+int	first_char_is_special(char **tokenized, int *index, char **pending_infile,
+		char **pending_outfile)
 {
 	if (tokenized[*index] && tokenized[*index + 1]
 		&& ft_strncmp(tokenized[*index], "<",
@@ -379,8 +394,8 @@ void	free_cmds(t_cmd *cmds)
 			free(current->command);
 		if (current->args)
 			free_resources(current->args);
-		if (current -> heredoc_lim)
-			free(current -> heredoc_lim);
+		if (current->heredoc_lim)
+			free(current->heredoc_lim);
 		if (current->infile > 0)
 			close(current->infile);
 		if (current->outfile > 1)
@@ -432,8 +447,7 @@ static int	leading_out(t_pipe_ctx *ctx, t_cmd **cmds, t_cmd **cur)
 	*cur = new_cmd(*(ctx->p_argc));
 	if (!*cmds)
 		*cmds = *cur;
-	fd = open(ctx->tok[*(ctx->index) + 1],
-			O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	fd = open(ctx->tok[*(ctx->index) + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	(*cur)->outfile = fd;
 	*(ctx->index) += 2;
 	return (1);
@@ -441,8 +455,8 @@ static int	leading_out(t_pipe_ctx *ctx, t_cmd **cmds, t_cmd **cur)
 
 static int	do_step(t_cmd **cmds, t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
 {
-	if (!*current && (leading_in(ctx, cmds, current)
-			|| leading_out(ctx, cmds, current)))
+	if (!*current && (leading_in(ctx, cmds, current) || leading_out(ctx, cmds,
+				current)))
 		return (1);
 	if (!*current)
 	{
@@ -452,11 +466,10 @@ static int	do_step(t_cmd **cmds, t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
 			*cmds = *current;
 		*(ctx->arg_pos) = 0;
 	}
-	if (handle_pipe(cmds, current, current, ctx)
-		|| handel_heredoc(current, ctx -> tok, ctx -> index, exec)
-		|| handle_in_redirection(current, ctx->tok, ctx->index)
-		|| handle_out_redirection(current, ctx->tok, ctx->index)
-		|| handle_dolar(ctx->tok, ctx->index, exec))
+	if (handle_pipe(cmds, current, current, ctx) || handel_heredoc(current,
+			ctx->tok, ctx->index, exec) || handle_in_redirection(current,
+			ctx->tok, ctx->index) || handle_out_redirection(current, ctx->tok,
+			ctx->index) || handle_dolar(ctx->tok, ctx->index, exec))
 		return (1);
 	handle_argument(current, ctx);
 	return (1);
@@ -464,11 +477,11 @@ static int	do_step(t_cmd **cmds, t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
 
 t_cmd	*add_to_struct(char **tokenized, t_exec exec, t_pipe_ctx *ctx)
 {
-	t_cmd		*cmds;
-	t_cmd		*current;
-	int			argc;
-	int			arg_pos;
-	int			index;
+	t_cmd	*cmds;
+	t_cmd	*current;
+	int		argc;
+	int		arg_pos;
+	int		index;
 
 	cmds = NULL;
 	current = NULL;
@@ -477,10 +490,10 @@ t_cmd	*add_to_struct(char **tokenized, t_exec exec, t_pipe_ctx *ctx)
 	index = 0;
 	if (!tokenized)
 		return (NULL);
-	ctx -> arg_pos = &arg_pos;
-	ctx -> tok = tokenized;
-	ctx -> p_argc = &argc;
-	ctx -> index = &index;
+	ctx->arg_pos = &arg_pos;
+	ctx->tok = tokenized;
+	ctx->p_argc = &argc;
+	ctx->index = &index;
 	while (tokenized[index])
 		if (do_step(&cmds, &current, ctx, exec))
 			continue ;
