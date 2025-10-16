@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/15 10:15:38 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/14 15:21:36 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/16 10:24:53 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,33 @@ int	special_char_counts(char *rl, int *index, int *count)
 	return (0);
 }
 
+void	skip_normal_token(char *rl, int *index)
+{
+	char	quote;
+
+	while (rl[*index] && !is_space(rl[*index]) && !is_special_char(rl[*index]))
+	{
+		if (rl[*index] == '"' || rl[*index] == '\'')
+		{
+			quote = rl[(*index)++];
+			while (rl[*index] && rl[*index] != quote)
+				(*index)++;
+			if (rl[*index] == quote)
+				(*index)++;
+		}
+		else
+			(*index)++;
+	}
+}
+
+void	skip_special_token(char *rl, int *index)
+{
+	while (rl[*index]
+		&& is_special_char(rl[*index]) && rl[*index] == rl[*index + 1])
+		(*index)++;
+	(*index)++;
+}
+
 int	count_words(char *rl)
 {
 	int	index;
@@ -95,12 +122,14 @@ int	count_words(char *rl)
 			index++;
 		if (!rl[index])
 			break ;
-		if (!quotes_count(rl, &index, &count) && !special_char_counts(rl,
-				&index, &count))
+		if (is_special_char(rl[index]))
 		{
-			while (rl[index] && !is_space(rl[index]) && rl[index] != '"'
-				&& rl[index] != '\'' && !is_special_char(rl[index]))
-				index++;
+			skip_special_token(rl, &index);
+			count++;
+		}
+		else
+		{
+			skip_normal_token(rl, &index);
 			count++;
 		}
 	}
@@ -173,7 +202,7 @@ char	*remove_quotes(char *fill)
 	result = (char *)malloc((ft_strlen(fill) + 1) * sizeof(char));
 	index = 0;
 	j = 0;
-	while (fill[index] && fill[index + 1])
+	while (fill[index])
 		process_clean_quotes(result, fill, &index, &j);
 	result[j] = '\0';
 	return (result);
@@ -250,15 +279,62 @@ int	fill_special_chars(char *rl, int *i, char **res, int *j)
 	return (0);
 }
 
-static void	add_word(char *rl, int *i, char **res, int *j)
+int	has_any_quote(char *str)
 {
-	int	start;
+	int	index;
+
+	index = 0;
+	while (str[index])
+	{
+		if (str[index] == '"' || str[index] == '\'')
+			return (1);
+		index++;
+	}
+	return (0);
+}
+
+char	*extract_token(char *rl, int *i)
+{
+	int		start;
+	char	quote;
 
 	start = *i;
-	while (rl[*i] && !is_space(rl[*i]) && rl[*i] != '"' && rl[*i] != '\''
-		&& !is_special_char(rl[*i]))
-		(*i)++;
-	res[(*j)++] = ft_substr(rl, start, *i - start);
+	while (rl[*i] && !is_space(rl[*i]) && !is_special_char(rl[*i]))
+	{
+		if (rl[*i] == '"' || rl[*i] == '\'')
+		{
+			quote = rl[(*i)++];
+			while (rl[*i] && rl[*i] != quote)
+				(*i)++;
+			if (rl[*i] == quote)
+				(*i)++;
+		}
+		else
+			(*i)++;
+	}
+	return (ft_substr(rl, start, *i - start));
+}
+
+static void	add_word(char *rl, int *i, t_token_ctx *ctx)
+{
+	char	*tmp;
+
+	tmp = extract_token(rl, i);
+	ctx -> res[*(ctx -> j)] = remove_quotes(tmp);
+	if (has_any_quote(tmp))
+		ctx -> quote_type[*(ctx -> j)] = 1;
+	else
+		ctx -> quote_type[*(ctx -> j)] = 0;
+	free(tmp);
+	(*(ctx -> j))++;
+}
+
+void	init_token_ctx(t_token_ctx *token_ctx,
+			char **res, int *j, int *quote_type)
+{
+	token_ctx -> res = res;
+	token_ctx -> j = j;
+	token_ctx ->quote_type = quote_type;
 }
 
 int	fill_result(char *rl, char **res, int *quote_type)
@@ -266,9 +342,11 @@ int	fill_result(char *rl, char **res, int *quote_type)
 	int			i;
 	int			j;
 	t_fill_ctx	ctx;
+	t_token_ctx	token_ctx;
 
 	i = 0;
 	j = 0;
+	init_token_ctx(&token_ctx, res, &j, quote_type);
 	while (rl[i])
 	{
 		while (is_space(rl[i]))
@@ -281,7 +359,7 @@ int	fill_result(char *rl, char **res, int *quote_type)
 		ctx.j = &j;
 		ctx.quote_type = quote_type;
 		if (!fill_quotes(&ctx) && !fill_special_chars(rl, &i, res, &j))
-			add_word(rl, &i, res, &j);
+			add_word(rl, &i, &token_ctx);
 	}
 	res[j] = NULL;
 	return (1);
