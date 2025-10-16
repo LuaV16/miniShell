@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   miniShell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/16 09:24:45 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/16 17:49:31 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,5 +103,6 @@ int check_valid_identifier(char *s);
 char **dup_envp(char **envp);
 int builtin_export(t_cmd *cmd, t_exec *exec);
 void add_or_replace_envp(t_exec *exec, char *entry);
+int builtin_unset(t_cmd *cmd, t_exec *exec);
 
 #endif

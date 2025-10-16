@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_exec_struct.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/19 10:27:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/14 13:54:03 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/16 17:50:32 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -272,6 +272,8 @@ int	is_builtin_name(t_cmd *cmds)
 		return (1);
 	else if (ft_strncmp(cmds -> command, "export", 7) == 0)
 		return (1);
+	else if (ft_strncmp(cmds -> command, "unset", 5) == 0)
+		return (1);
 	return (0);
 }
 
@@ -285,6 +287,8 @@ int	exec_builtin(t_cmd *cmd, t_exec *exec)
 		return (builtin_echo(cmd));
 	else if (ft_strncmp(cmd -> command, "export", 7) == 0)
 		return (builtin_export(cmd, exec));
+	else if (ft_strncmp(cmd -> command, "unset", 5) == 0)
+		return (builtin_unset(cmd, exec));
 	return (0);
 }
 
