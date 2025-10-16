@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/14 15:10:57 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/16 21:44:38 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,12 +71,12 @@ int	handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **last, t_pipe_ctx *ctx)
 {
 	t_cmd	*new_command;
 
-	if (!ctx->tok[*(ctx->index)] || ctx->tok[*(ctx->index)][0] != '|'
-		|| ctx->tok[*(ctx->index)][1] != '\0' || !ctx->tok[*(ctx->index) + 1]
-		|| (ctx->tok[*(ctx->index) + 1][0] == '|' && ctx->tok[*(ctx->index)
+	if (!ctx->tok[(ctx->index)] || ctx->tok[(ctx->index)][0] != '|'
+		|| ctx->tok[(ctx->index)][1] != '\0' || !ctx->tok[(ctx->index) + 1]
+		|| (ctx->tok[(ctx->index) + 1][0] == '|' && ctx->tok[(ctx->index)
 			+ 1][1] == '\0'))
 		return (0);
-	new_command = new_cmd(count_args(ctx->tok, *(ctx->index) + 1));
+	new_command = new_cmd(count_args(ctx->tok, (ctx->index) + 1));
 	if (!new_command)
 		return (0);
 	if (*current)
@@ -86,56 +86,58 @@ int	handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **last, t_pipe_ctx *ctx)
 	*last = new_command;
 	*current = new_command;
 	if (ctx->arg_pos)
-		*(ctx->arg_pos) = 0;
+		(ctx->arg_pos) = 0;
 	if (ctx->p_argc)
-		*(ctx->p_argc) = count_args(ctx->tok, *(ctx->index) + 1);
-	(*(ctx->index))++;
+		(ctx->p_argc) = count_args(ctx->tok, (ctx->index) + 1);
+	((ctx->index))++;
 	return (1);
 }
 
-int	handle_out_redirection(t_cmd **current, char **tokenized, int *index)
+int	handle_out_redirection(t_cmd **current, t_pipe_ctx *ctx)
 {
 	int	fd;
 
-	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current))
+	if (!ctx->tok[ctx->index] || !ctx->tok[(ctx->index) + 1] || !(*current))
 		return (0);
-	if (ft_strncmp(tokenized[*index], ">", ft_strlen(tokenized[*index])) == 0)
+	if (ft_strncmp(ctx->tok[ctx->index],
+			">", ft_strlen(ctx->tok[ctx->index])) == 0)
 	{
-		if (!tokenized[(*index + 1)])
+		if (!ctx->tok[ctx->index + 1])
 			return (0);
-		fd = open(tokenized[(*index) + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		fd = open(ctx->tok[ctx->index + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 		if (fd < 0)
 		{
-			perror(tokenized[(*index) + 1]);
+			perror(ctx->tok[ctx->index + 1]);
 			(*current)->outfile = -1;
-			(*index) += 2;
+			ctx->index += 2;
 			return (1);
 		}
 		(*current)->outfile = fd;
-		(*index) += 2;
+		ctx->index += 2;
 		return (1);
 	}
 	return (0);
 }
 
-int	handle_in_redirection(t_cmd **current, char **tokenized, int *index)
+int	handle_in_redirection(t_cmd **current, t_pipe_ctx *ctx)
 {
 	int	fd;
 
-	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current))
+	if (!ctx->tok[ctx->index] || !ctx->tok[ctx->index + 1] || !(*current))
 		return (0);
-	if (ft_strncmp(tokenized[*index], "<", ft_strlen(tokenized[*index])) == 0)
+	if (ft_strncmp(ctx->tok[ctx->index],
+			"<", ft_strlen(ctx->tok[ctx->index])) == 0)
 	{
-		fd = open(tokenized[(*index) + 1], O_RDONLY);
+		fd = open(ctx->tok[(ctx->index) + 1], O_RDONLY);
 		if (fd < 0)
 		{
-			perror(tokenized[(*index) + 1]);
+			perror(ctx->tok[(ctx->index) + 1]);
 			(*current)->infile = -1;
-			(*index) += 2;
+			ctx->index += 2;
 			return (1);
 		}
 		(*current)->infile = fd;
-		(*index) += 2;
+		ctx->index += 2;
 		return (1);
 	}
 	return (0);
@@ -164,10 +166,10 @@ t_exec	create_heredoc_exec(t_exec exec, int has_quotes)
 
 char	*expnad_heredoc_line(char *line, t_exec exec, int has_quotes)
 {
-	char	**line_tokens;
-	char	*expanded;
-	int		i;
-	t_exec	temp_exec;
+	char		**line_tokens;
+	char		*expanded;
+	t_exec		temp_exec;
+	t_pipe_ctx	ctx_local;
 
 	line_tokens = malloc(sizeof(char *) * 2);
 	if (!line_tokens)
@@ -180,8 +182,9 @@ char	*expnad_heredoc_line(char *line, t_exec exec, int has_quotes)
 		free_resources(line_tokens);
 		return (ft_strdup(line));
 	}
-	i = 0;
-	handle_dolar(line_tokens, &i, temp_exec);
+	ctx_local.tok = line_tokens;
+	ctx_local.index = 0;
+	handle_dolar(&ctx_local, temp_exec);
 	expanded = ft_strdup(line_tokens[0]);
 	free(temp_exec.quote_type);
 	free_resources(line_tokens);
@@ -235,92 +238,93 @@ int	build_heredoc(char *lim, t_exec exec, int has_quotes)
 	return (fd[0]);
 }
 
-int	handel_heredoc(t_cmd **current, char **tokenized, int *index, t_exec exec)
+int	handel_heredoc(t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
 {
 	int	fd;
 	int	has_quotes;
 
-	if (!tokenized[*index] || !tokenized[(*index) + 1] || !(*current))
+	if (!ctx->tok[ctx->index] || !ctx->tok[(ctx->index) + 1] || !(*current))
 		return (0);
-	if (tokenized[*index][0] == '<' && tokenized[*index][1] == '<')
+	if (ctx->tok[ctx->index][0] == '<' && ctx->tok[ctx->index][1] == '<')
 	{
 		has_quotes = 0;
 		if (exec.quote_type)
-			has_quotes = exec.quote_type[*index + 1];
-		fd = build_heredoc(tokenized[*index + 1], exec, has_quotes);
-		set_heredoc_fd(*current, fd, tokenized[*index + 1]);
-		*index += 2;
+			has_quotes = exec.quote_type[ctx->index + 1];
+		fd = build_heredoc(ctx->tok[ctx->index + 1], exec, has_quotes);
+		set_heredoc_fd(*current, fd, ctx->tok[ctx->index + 1]);
+		ctx->index += 2;
 		return (1);
 	}
 	return (0);
 }
 
-int	replace_exit_code(char **tokenized, int *index, t_exec exec)
+int	replace_exit_code(char **tokenized, int index, t_exec exec)
 {
 	char	*exit_s;
 
 	exit_s = ft_itoa(exec.exit);
 	if (!exit_s)
 		return (0);
-	free(tokenized[*index]);
-	tokenized[*index] = exit_s;
+	free(tokenized[index]);
+	tokenized[index] = exit_s;
 	return (1);
 }
 
-int	expand_dollar_next(char **tokenized, int *index)
+int	expand_dollar_next(t_pipe_ctx *ctx)
 {
 	char	*env;
 	int		i;
 
-	if (!tokenized[(*index) + 1])
+	if (!ctx->tok[ctx->index + 1])
 		return (0);
-	env = getenv(tokenized[(*index) + 1]);
-	free(tokenized[*index]);
+	env = getenv(ctx->tok[ctx->index + 1]);
+	free(ctx->tok[ctx->index]);
 	if (env)
-		tokenized[*index] = ft_strdup(env);
+		ctx->tok[ctx->index] = ft_strdup(env);
 	else
-		tokenized[*index] = ft_strdup("");
-	free(tokenized[(*index) + 1]);
-	i = (*index) + 1;
-	while (tokenized[i])
+		ctx->tok[ctx->index] = ft_strdup("");
+	free(ctx->tok[ctx->index + 1]);
+	i = ctx->index + 1;
+	while (ctx->tok[i])
 	{
-		tokenized[i] = tokenized[i + 1];
+		ctx->tok[i] = ctx->tok[i + 1];
 		i++;
 	}
 	return (1);
 }
 
-int	expand_dollar_var(char **tokenized, int *index)
+int	expand_dollar_var(t_pipe_ctx *ctx)
 {
 	char	*var;
 	char	*env;
 
-	var = malloc(ft_strlen(tokenized[*index]));
+	var = malloc(ft_strlen(ctx->tok[ctx->index]));
 	if (!var)
 		return (0);
-	ft_strlcpy(var, tokenized[*index] + 1, ft_strlen(tokenized[*index]));
+	ft_strlcpy(var, ctx->tok[ctx->index] + 1, ft_strlen(ctx->tok[ctx->index]));
 	env = getenv(var);
-	free(tokenized[*index]);
+	free(ctx->tok[ctx->index]);
 	if (env)
-		tokenized[*index] = ft_strdup(env);
+		ctx->tok[ctx->index] = ft_strdup(env);
 	else
-		tokenized[*index] = ft_strdup("");
+		ctx->tok[ctx->index] = ft_strdup("");
 	free(var);
 	return (1);
 }
 
-int	handle_dolar(char **tokenized, int *index, t_exec exec)
+int	handle_dolar(t_pipe_ctx *ctx, t_exec exec)
 {
-	if (!tokenized[*index])
+	if (!ctx->tok[ctx->index])
 		return (0);
-	if (exec.quote_type[*index] == 1)
+	if (exec.quote_type[ctx->index] == 1)
 		return (0);
-	if (tokenized[*index][0] == '$' && tokenized[*index][1] == '?')
-		return (replace_exit_code(tokenized, index, exec));
-	if (ft_strncmp(tokenized[*index], "$", ft_strlen(tokenized[*index])) == 0)
-		return (expand_dollar_next(tokenized, index));
-	if (tokenized[*index][0] == '$')
-		return (expand_dollar_var(tokenized, index));
+	if (ctx->tok[ctx->index][0] == '$' && ctx->tok[ctx->index][1] == '?')
+		return (replace_exit_code(ctx->tok, ctx->index, exec));
+	if (ft_strncmp(ctx->tok[ctx->index],
+			"$", ft_strlen(ctx->tok[ctx->index])) == 0)
+		return (expand_dollar_next(ctx));
+	if (ctx->tok[ctx->index][0] == '$')
+		return (expand_dollar_var(ctx));
 	return (0);
 }
 
@@ -340,10 +344,10 @@ void	handle_argument(t_cmd **current, t_pipe_ctx *ctx)
 {
 	char	*tok;
 
-	if (!ctx->tok[*ctx->index])
+	if (!ctx->tok[ctx->index])
 		return ;
-	tok = ctx->tok[*ctx->index];
-	if (!(*current)->command && *(ctx->arg_pos) == 0)
+	tok = ctx->tok[ctx->index];
+	if (!(*current)->command && (ctx->arg_pos) == 0)
 	{
 		(*current)->command = ft_strdup(tok);
 		if (!(*current)->command)
@@ -351,35 +355,35 @@ void	handle_argument(t_cmd **current, t_pipe_ctx *ctx)
 		(*current)->args[0] = ft_strdup(tok);
 		if (!(*current)->args[0])
 			return ;
-		*(ctx->arg_pos) = 1;
+		(ctx->arg_pos) = 1;
 		(*current)->args[1] = NULL;
 	}
-	else if (*(ctx->arg_pos) < *(ctx->p_argc))
+	else if ((ctx->arg_pos) < (ctx->p_argc))
 	{
-		(*current)->args[*(ctx->arg_pos)] = ft_strdup(tok);
-		(*(ctx->arg_pos))++;
-		(*current)->args[*(ctx->arg_pos)] = NULL;
+		(*current)->args[(ctx->arg_pos)] = ft_strdup(tok);
+		((ctx->arg_pos))++;
+		(*current)->args[(ctx->arg_pos)] = NULL;
 	}
-	(*(ctx->index))++;
+	((ctx->index))++;
 }
 
-int	first_char_is_special(char **tokenized, int *index, char **pending_infile,
-		char **pending_outfile)
+int	first_char_is_special(t_pipe_ctx *ctx,
+		char **pending_infile, char **pending_outfile)
 {
-	if (tokenized[*index] && tokenized[*index + 1]
-		&& ft_strncmp(tokenized[*index], "<",
-			ft_strlen(tokenized[*index])) == 0)
+	if (ctx->tok[ctx->index] && ctx->tok[ctx->index + 1]
+		&& ft_strncmp(ctx->tok[ctx->index],
+			"<", ft_strlen(ctx->tok[ctx->index])) == 0)
 	{
-		*pending_infile = ft_strdup(tokenized[(*index) + 1]);
-		(*index) += 2;
+		*pending_infile = ft_strdup(ctx->tok[ctx->index + 1]);
+		ctx->index += 2;
 		return (1);
 	}
-	if (tokenized[*index] && tokenized[*index + 1]
-		&& ft_strncmp(tokenized[*index], ">",
-			ft_strlen(tokenized[*index])) == 0)
+	if (ctx->tok[ctx->index] && ctx->tok[ctx->index + 1]
+		&& ft_strncmp(ctx->tok[ctx->index],
+			">", ft_strlen(ctx->tok[ctx->index])) == 0)
 	{
-		*pending_outfile = ft_strdup(tokenized[(*index) + 1]);
-		(*index) += 2;
+		*pending_outfile = ft_strdup(ctx->tok[ctx->index + 1]);
+		ctx->index += 2;
 		return (1);
 	}
 	return (0);
@@ -417,24 +421,24 @@ static int	leading_in(t_pipe_ctx *ctx, t_cmd **cmds, t_cmd **cur)
 {
 	int	fd;
 
-	if (*cur || !ctx->tok[*(ctx->index)] || !ctx->tok[*(ctx->index) + 1])
+	if (*cur || !ctx->tok[(ctx->index)] || !ctx->tok[(ctx->index) + 1])
 		return (0);
-	if (ft_strncmp(ctx->tok[*(ctx->index)], "<", 1) != 0)
+	if (ft_strncmp(ctx->tok[(ctx->index)], "<", 1) != 0)
 		return (0);
-	*(ctx->p_argc) = count_args(ctx->tok, *(ctx->index));
-	*cur = new_cmd(*(ctx->p_argc));
+	(ctx->p_argc) = count_args(ctx->tok, (ctx->index));
+	*cur = new_cmd((ctx->p_argc));
 	if (!*cmds)
 		*cmds = *cur;
-	fd = open(ctx->tok[*(ctx->index) + 1], O_RDONLY);
+	fd = open(ctx->tok[(ctx->index) + 1], O_RDONLY);
 	if (fd < 0)
 	{
-		perror(ctx->tok[*(ctx->index) + 1]);
+		perror(ctx->tok[(ctx->index) + 1]);
 		(*cur)->infile = -1;
-		*(ctx->index) += 2;
+		(ctx->index) += 2;
 		return (1);
 	}
 	(*cur)->infile = fd;
-	*(ctx->index) += 2;
+	(ctx->index) += 2;
 	return (1);
 }
 
@@ -442,17 +446,17 @@ static int	leading_out(t_pipe_ctx *ctx, t_cmd **cmds, t_cmd **cur)
 {
 	int	fd;
 
-	if (*cur || !ctx->tok[*(ctx->index)] || !ctx->tok[*(ctx->index) + 1])
+	if (*cur || !ctx->tok[(ctx->index)] || !ctx->tok[(ctx->index) + 1])
 		return (0);
-	if (ft_strncmp(ctx->tok[*(ctx->index)], ">", 1) != 0)
+	if (ft_strncmp(ctx->tok[(ctx->index)], ">", 1) != 0)
 		return (0);
-	*(ctx->p_argc) = count_args(ctx->tok, *(ctx->index));
-	*cur = new_cmd(*(ctx->p_argc));
+	(ctx->p_argc) = count_args(ctx->tok, (ctx->index));
+	*cur = new_cmd((ctx->p_argc));
 	if (!*cmds)
 		*cmds = *cur;
-	fd = open(ctx->tok[*(ctx->index) + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	fd = open(ctx->tok[(ctx->index) + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	(*cur)->outfile = fd;
-	*(ctx->index) += 2;
+	(ctx->index) += 2;
 	return (1);
 }
 
@@ -463,16 +467,17 @@ static int	do_step(t_cmd **cmds, t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
 		return (1);
 	if (!*current)
 	{
-		*(ctx->p_argc) = count_args(ctx->tok, *(ctx->index));
-		*current = new_cmd(*(ctx->p_argc));
+		(ctx->p_argc) = count_args(ctx->tok, (ctx->index));
+		*current = new_cmd((ctx->p_argc));
 		if (!*cmds)
 			*cmds = *current;
-		*(ctx->arg_pos) = 0;
+		(ctx->arg_pos) = 0;
 	}
-	if (handle_pipe(cmds, current, current, ctx) || handel_heredoc(current,
-			ctx->tok, ctx->index, exec) || handle_in_redirection(current,
-			ctx->tok, ctx->index) || handle_out_redirection(current, ctx->tok,
-			ctx->index) || handle_dolar(ctx->tok, ctx->index, exec))
+	if (handle_pipe(cmds, current, current, ctx)
+		|| handel_heredoc(current, ctx, exec)
+		|| handle_in_redirection(current, ctx)
+		|| handle_out_redirection(current, ctx)
+		|| handle_dolar(ctx, exec))
 		return (1);
 	handle_argument(current, ctx);
 	return (1);
@@ -482,22 +487,14 @@ t_cmd	*add_to_struct(char **tokenized, t_exec exec, t_pipe_ctx *ctx)
 {
 	t_cmd	*cmds;
 	t_cmd	*current;
-	int		argc;
-	int		arg_pos;
-	int		index;
 
 	cmds = NULL;
 	current = NULL;
-	argc = 0;
-	arg_pos = 0;
-	index = 0;
+	ctx->index = 0;
 	if (!tokenized)
 		return (NULL);
-	ctx->arg_pos = &arg_pos;
 	ctx->tok = tokenized;
-	ctx->p_argc = &argc;
-	ctx->index = &index;
-	while (tokenized[index])
+	while (tokenized[ctx->index])
 		if (do_step(&cmds, &current, ctx, exec))
 			continue ;
 	if (cmds)

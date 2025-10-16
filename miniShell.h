@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   miniShell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/16 17:49:31 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/10/16 21:35:36 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,10 +70,10 @@ typedef struct s_fill_ctx
 
 typedef struct	s_pipe_ctx
 {
-	int *arg_pos;
+	int arg_pos;
 	char **tok;
-	int *p_argc;
-	int *index;
+	int p_argc;
+	int index;
 }				t_pipe_ctx;
 
 typedef struct s_token_ctx
@@ -92,9 +92,10 @@ void					free_resources(char **str);
 int						count_args(char **tokenized, int start);
 pid_t					fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized);
 void					free_cmds(t_cmd *cmds);
-int						first_char_is_special(char **tokenized, int *index,
-							char **pending_infile, char **pending_outfile);
-int						handle_dolar(char **tokenized, int *index, t_exec exec);
+int					first_char_is_special(t_pipe_ctx *ctx, char **pending_infile, char **pending_outfile);
+int					handle_dolar(t_pipe_ctx *ctx, t_exec exec);
+int					expand_dollar_var(t_pipe_ctx *ctx);
+int					expand_dollar_next(t_pipe_ctx *ctx);
 void					handle_argument(t_cmd **current, t_pipe_ctx *ctx);
 int						is_space(char c);
 void					set_prev_fd(t_cmd *cmds);

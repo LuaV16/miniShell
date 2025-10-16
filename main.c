@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/14 15:01:48 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/16 21:16:31 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,6 +130,13 @@ static void	cleanup_exec(t_exec *exec)
 	}
 }
 
+void	init_ctx(t_pipe_ctx *ctx)
+{
+	ctx -> index = 0;
+	ctx -> p_argc = 0;
+	ctx -> arg_pos = 0;
+}
+
 static int	process_tokens(char *rl, t_exec *exec, char **envp)
 {
 	char		**tokenized;
@@ -140,6 +147,7 @@ static int	process_tokens(char *rl, t_exec *exec, char **envp)
 	tokenized = ft_token(rl, exec);
 	if (!tokenized)
 		return (0);
+	init_ctx(&ctx);
 	cmds = add_to_struct(tokenized, *exec, &ctx);
 	init_exec_struct(cmds, exec, envp);
 	exec->cmds = cmds;

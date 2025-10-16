@@ -1,6 +1,6 @@
 NAME=miniShell
 CC=cc
-CFLAGS=-Wall -Wextra -Werror -Ilibft -g -fsanitize=address
+CFLAGS=-Wall -Wextra -Werror -Ilibft -g #-fsanitize=address
 LDCFLAGS=-lreadline
 SRCS=main.c signals.c tokens/tokens.c tokens/token_errors.c tokens/add_to_struct.c exec/init_exec_struct.c exec/builtin_export.c exec/builtin_export_tools.c exec/builtin_unset.c
 OBJS=$(SRCS:.c=.o)
