@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/16 21:44:38 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/17 13:53:32 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -270,33 +270,42 @@ int	replace_exit_code(char **tokenized, int index, t_exec exec)
 	return (1);
 }
 
+static void	shift_tokens_left(char **tok, int start, int shift)
+{
+	int	i;
+
+	i = start;
+	while (tok[i])
+	{
+		tok[i] = tok[i + shift];
+		i++;
+	}
+}
+
 int	expand_dollar_next(t_pipe_ctx *ctx)
 {
 	char	*env;
-	int		i;
 
 	if (!ctx->tok[ctx->index + 1])
 		return (0);
 	env = getenv(ctx->tok[ctx->index + 1]);
 	free(ctx->tok[ctx->index]);
-	if (env)
-		ctx->tok[ctx->index] = ft_strdup(env);
-	else
-		ctx->tok[ctx->index] = ft_strdup("");
 	free(ctx->tok[ctx->index + 1]);
-	i = ctx->index + 1;
-	while (ctx->tok[i])
+	if (env)
 	{
-		ctx->tok[i] = ctx->tok[i + 1];
-		i++;
+		ctx->tok[ctx->index] = ft_strdup(env);
+		shift_tokens_left(ctx->tok, ctx->index + 1, 1);
+		return (1);
 	}
-	return (1);
+	shift_tokens_left(ctx->tok, ctx->index, 2);
+	return (0);
 }
 
 int	expand_dollar_var(t_pipe_ctx *ctx)
 {
 	char	*var;
 	char	*env;
+	int		i;
 
 	var = malloc(ft_strlen(ctx->tok[ctx->index]));
 	if (!var)
@@ -305,11 +314,39 @@ int	expand_dollar_var(t_pipe_ctx *ctx)
 	env = getenv(var);
 	free(ctx->tok[ctx->index]);
 	if (env)
+	{
 		ctx->tok[ctx->index] = ft_strdup(env);
-	else
-		ctx->tok[ctx->index] = ft_strdup("");
+		free(var);
+		return (1);
+	}
+	i = ctx->index;
+	while (ctx->tok[i])
+	{
+		ctx->tok[i] = ctx->tok[i + 1];
+		i++;
+	}
 	free(var);
-	return (1);
+	return (0);
+}
+
+static int	handle_dollar_only(t_pipe_ctx *ctx)
+{
+	int	had_value;
+
+	had_value = expand_dollar_next(ctx);
+	if (!had_value)
+		return (1);
+	return (0);
+}
+
+static int	handle_dollar_var_case(t_pipe_ctx *ctx)
+{
+	int	had_value;
+
+	had_value = expand_dollar_var(ctx);
+	if (!had_value)
+		return (1);
+	return (0);
 }
 
 int	handle_dolar(t_pipe_ctx *ctx, t_exec exec)
@@ -319,12 +356,15 @@ int	handle_dolar(t_pipe_ctx *ctx, t_exec exec)
 	if (exec.quote_type[ctx->index] == 1)
 		return (0);
 	if (ctx->tok[ctx->index][0] == '$' && ctx->tok[ctx->index][1] == '?')
-		return (replace_exit_code(ctx->tok, ctx->index, exec));
+	{
+		replace_exit_code(ctx->tok, ctx->index, exec);
+		return (0);
+	}
 	if (ft_strncmp(ctx->tok[ctx->index],
 			"$", ft_strlen(ctx->tok[ctx->index])) == 0)
-		return (expand_dollar_next(ctx));
+		return (handle_dollar_only(ctx));
 	if (ctx->tok[ctx->index][0] == '$')
-		return (expand_dollar_var(ctx));
+		return (handle_dollar_var_case(ctx));
 	return (0);
 }
 
