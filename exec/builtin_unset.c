@@ -3,19 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   builtin_unset.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 17:48:09 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/16 17:48:38 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/10/23 13:25:47 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../miniShell.h"
 
-void remove_env_entry(char ***envp, char *name)
+void	remove_env_entry(char ***envp, char *name)
 {
-    int i;
-    int j;
+	int	i;
+	int	j;
     size_t n;
 
     if (!envp || !*envp || !name || !*name)

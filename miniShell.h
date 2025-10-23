@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/16 21:35:36 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/23 13:16:11 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,5 +105,5 @@ char **dup_envp(char **envp);
 int builtin_export(t_cmd *cmd, t_exec *exec);
 void add_or_replace_envp(t_exec *exec, char *entry);
 int builtin_unset(t_cmd *cmd, t_exec *exec);
-
+int	builtin_env(t_exec *exec);
 #endif
