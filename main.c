@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/23 13:17:06 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/23 18:23:16 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@
 	printf("==================\n");
 }*/
 
-static void	process_input(char **rl)
+void	process_input(char **rl)
 {
 	if (*rl != NULL && **rl)
 		add_history(*rl);
@@ -48,48 +48,7 @@ static void	process_input(char **rl)
 	}
 }
 
-static int	execute_commands(t_exec *exec, char **tokenized)
-{
-	t_cmd	*current;
-	int		index;
-	pid_t	rc;
-
-	current = exec->cmds;
-	index = 0;
-	while (current)
-	{
-		rc = fork_procces(index, exec, current, tokenized);
-		if (rc > 0)
-			exec->pids[index] = rc;
-		else
-			exec->pids[index] = -1;
-		if (rc == 127)
-			exec->exit = 127;
-		index++;
-		current = current->next;
-	}
-	return (index);
-}
-
-static void	wait_processes(t_exec *exec)
-{
-	int	index;
-	int	status;
-
-	index = 0;
-	while (index < exec->count_cmds)
-	{
-		if (exec->pids[index] > 0)
-		{
-			waitpid(exec->pids[index], &status, 0);
-			if (!exec->sticky_exit && WIFEXITED(status))
-				exec->exit = WEXITSTATUS(status);
-		}
-		index++;
-	}
-}
-
-static int	handle_null_input(char *rl)
+int	handle_null_input(char *rl)
 {
 	if (rl == NULL)
 	{
@@ -101,71 +60,7 @@ static int	handle_null_input(char *rl)
 	return (0);
 }
 
-static void	cleanup_exec(t_exec *exec)
-{
-	int	p;
-
-	if (exec->quote_type)
-	{
-		free(exec->quote_type);
-		exec->quote_type = NULL;
-	}
-	if (exec->cmd_paths)
-	{
-		p = 0;
-		while (exec->cmd_paths[p])
-			free(exec->cmd_paths[p++]);
-		free(exec->cmd_paths);
-		exec->cmd_paths = NULL;
-	}
-	if (exec->pids)
-	{
-		free(exec->pids);
-		exec->pids = NULL;
-	}
-	if (exec->envp)
-	{
-		free_resources(exec->envp);
-		exec->envp = NULL;
-	}
-}
-
-void	init_ctx(t_pipe_ctx *ctx)
-{
-	ctx -> index = 0;
-	ctx -> p_argc = 0;
-	ctx -> arg_pos = 0;
-}
-
-static int	process_tokens(char *rl, t_exec *exec, char **envp)
-{
-	char		**tokenized;
-	t_cmd		*cmds;
-	t_pipe_ctx	ctx;
-
-	exec->sticky_exit = 0;
-	tokenized = ft_token(rl, exec);
-	if (!tokenized)
-		return (0);
-	init_ctx(&ctx);
-	cmds = add_to_struct(tokenized, *exec, &ctx);
-	init_exec_struct(cmds, exec, envp);
-	exec->cmds = cmds;
-	if (!cmds)
-	{
-		free_resources(tokenized);
-		return (0);
-	}
-	execute_commands(exec, tokenized);
-	wait_processes(exec);
-	free_resources(tokenized);
-	cleanup_exec(exec);
-	if (cmds)
-		free_cmds(cmds);
-	return (1);
-}
-
-static void	init_shell(t_exec *exec)
+void	init_shell(t_exec *exec)
 {
 	exec->exit = 0;
 	exec->sticky_exit = 0;
