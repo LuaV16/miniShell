@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 19:28:42 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/24 12:04:04 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/24 13:42:07 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,28 +47,24 @@ int	expand_dollar_var(t_pipe_ctx *ctx)
 {
 	char	*var;
 	char	*env;
-	int		i;
+	char	*eq;
+	char	*varname;
 
-	var = malloc(ft_strlen(ctx->tok[ctx->index]));
+	var = ft_strdup(ctx->tok[ctx->index] + 1);
 	if (!var)
 		return (0);
-	ft_strlcpy(var, ctx->tok[ctx->index] + 1, ft_strlen(ctx->tok[ctx->index]));
-	env = getenv(var);
+	varname = get_var_name(var, &eq);
+	env = getenv(varname);
+	free(varname);
 	free(ctx->tok[ctx->index]);
 	if (env)
-	{
 		ctx->tok[ctx->index] = ft_strdup(env);
-		free(var);
-		return (1);
-	}
-	i = ctx->index;
-	while (ctx->tok[i])
-	{
-		ctx->tok[i] = ctx->tok[i + 1];
-		i++;
-	}
+	else if (eq)
+		ctx->tok[ctx->index] = ft_strdup(eq);
+	else
+		ctx->tok[ctx->index] = ft_strdup("");
 	free(var);
-	return (0);
+	return (env != NULL);
 }
 
 int	handle_dollar_only(t_pipe_ctx *ctx)

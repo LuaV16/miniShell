@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/09 19:35:37 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/24 12:35:56 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/24 13:44:26 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,10 +41,12 @@ int	check_valid_identifier(char *s)
 
 	if (!s || !s[0])
 		return (0);
+	if (s[0] == '=')
+		return (0);
 	if (!(ft_isalpha((int)s[0]) || s[0] == '_'))
 		return (0);
 	i = 1;
-	while (s[i])
+	while (s[i] && s[i] != '=')
 	{
 		if (!(ft_isalnum(s[i]) || s[i] == '_'))
 			return (0);
