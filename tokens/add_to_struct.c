@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/24 12:36:26 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/24 13:05:11 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,8 +91,9 @@ int	first_char_is_special(t_pipe_ctx *ctx,
 static int	do_step(t_cmd **cmds, t_cmd **current,
 				t_pipe_ctx *ctx, t_exec *exec)
 {
-	if (!*current && (leading_in(ctx, cmds, current) || leading_out(ctx, cmds,
-				current)))
+	if (!*current && (leading_in(ctx, cmds, current)
+			|| leading_out(ctx, cmds, current)
+			|| leading_double_out(ctx, cmds, current)))
 		return (1);
 	if (!*current)
 	{
@@ -106,6 +107,7 @@ static int	do_step(t_cmd **cmds, t_cmd **current,
 		|| handel_heredoc(current, ctx, exec)
 		|| handle_in_redirection(current, ctx)
 		|| handle_out_redirection(current, ctx)
+		|| handle_double_out_redirection(current, ctx)
 		|| handle_dolar(ctx, exec))
 		return (1);
 	handle_argument(current, ctx);

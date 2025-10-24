@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/24 12:10:46 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/24 12:58:46 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,5 +159,7 @@ t_exec	*create_heredoc_exec(t_exec *exec, int has_quotes);
 void	set_heredoc_fd(t_cmd *current, int fd, char *lim);
 int		build_heredoc(char *lim, t_exec *exec, int has_quotes);
 t_cmd	*new_cmd(int argc);
+int		handle_double_out_redirection(t_cmd **current, t_pipe_ctx *ctx);
+int		leading_double_out(t_pipe_ctx *ctx, t_cmd **cmds, t_cmd **cur);
 
 #endif
