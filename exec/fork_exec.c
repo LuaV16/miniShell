@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 18:38:15 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/23 18:58:47 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/24 12:44:00 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized)
 	result = handle_builtin_direct(exec, cmd, index);
 	if (result)
 		return (result);
-	if (!is_last(index, *exec))
+	if (!is_last(index, exec))
 		init_pipe(exec);
 	result = validate_command(exec, cmd, index);
 	if (result)
@@ -31,48 +31,60 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized)
 	else if (pid < 0)
 	{
 		perror("pid error");
-		free_context(*exec, exec->cmds, 0, tokenized);
+		free_context(exec, exec->cmds, 0, tokenized);
 		exec->exit = 127;
 		exit(127);
 	}
-	clean_parent(index, *exec, cmd);
+	clean_parent(index, exec, cmd);
 	return (pid);
+}
+
+int	is_parent_only_builtin(t_cmd *cmd)
+{
+	if (ft_strncmp(cmd->command, "cd", 3) == 0)
+		return (1);
+	else if (ft_strncmp(cmd->command, "export", 7) == 0)
+		return (1);
+	else if (ft_strncmp(cmd->command, "unset", 6) == 0)
+		return (1);
+	else if (ft_strncmp(cmd->command, "exit", 5) == 0)
+		return (1);
+	return (0);
 }
 
 int	handle_builtin_direct(t_exec *exec, t_cmd *cmd, int idx)
 {
 	int	status;
-	int	i;
 
 	if (!is_builtin_name(cmd))
 		return (0);
-	if (!is_last(idx, *exec) || cmd->infile > 0
+	if (is_parent_only_builtin(cmd) && is_last(idx, exec))
+	{
+		status = exec_builtin(cmd, exec);
+		exec->exit = status;
+		return (-1);
+	}
+	if (!is_last(idx, exec) || cmd->infile > 0
 		|| cmd->outfile > 1 || cmd->prev_fd > 0)
 		return (0);
 	status = exec_builtin(cmd, exec);
 	exec->exit = status;
-	if (cmd->args)
-	{
-		i = 0;
-		while (cmd->args[i])
-			i++;
-	}
 	return (-1);
 }
 
 void	exec_child_process(t_exec *exec, t_cmd *cmd, int idx)
 {
-	int	status;
+	int	status;	
 
-	redirect_stdio(*exec, cmd, idx);
-	clean_child(idx, *exec, cmd);
+	redirect_stdio(exec, cmd, idx);
+	clean_child(idx, exec, cmd);
 	if (is_builtin_name(cmd))
 	{
 		status = exec_builtin(cmd, exec);
 		exec->exit = status;
 		exit(status);
 	}
-	exec_child(cmd, *exec, idx);
+	exec_child(cmd, exec, idx);
 }
 
 int	validate_command(t_exec *exec, t_cmd *cmd, int idx)

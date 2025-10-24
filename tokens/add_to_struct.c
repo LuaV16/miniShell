@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/16 17:06:53 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/23 19:35:02 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/24 12:36:26 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,8 @@ int	first_char_is_special(t_pipe_ctx *ctx,
 	return (0);
 }
 
-static int	do_step(t_cmd **cmds, t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
+static int	do_step(t_cmd **cmds, t_cmd **current,
+				t_pipe_ctx *ctx, t_exec *exec)
 {
 	if (!*current && (leading_in(ctx, cmds, current) || leading_out(ctx, cmds,
 				current)))
@@ -111,7 +112,7 @@ static int	do_step(t_cmd **cmds, t_cmd **current, t_pipe_ctx *ctx, t_exec exec)
 	return (1);
 }
 
-t_cmd	*add_to_struct(char **tokenized, t_exec exec, t_pipe_ctx *ctx)
+t_cmd	*add_to_struct(char **tokenized, t_exec *exec, t_pipe_ctx *ctx)
 {
 	t_cmd	*cmds;
 	t_cmd	*current;

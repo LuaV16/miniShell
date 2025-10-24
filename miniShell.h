@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/23 19:48:06 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/24 12:10:46 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,9 +86,9 @@ typedef struct s_token_ctx
 }	t_token_ctx;
 
 char	**ft_token(char *rl, t_exec *exec);
-t_cmd	*add_to_struct(char **tokenized, t_exec exec, t_pipe_ctx *ctx);
+t_cmd	*add_to_struct(char **tokenized, t_exec *exec, t_pipe_ctx *ctx);
 void	init_exec_struct(t_cmd *cmds, t_exec *exec, char **envp);
-void	free_context(t_exec exec, t_cmd *cmds, int exit_flags,
+void	free_context(t_exec *exec, t_cmd *cmds, int exit_flags,
 			char **tokenized);
 void	free_resources(char **str);
 int		count_args(char **tokenized, int start);
@@ -96,7 +96,7 @@ pid_t	fork_procces(int index, t_exec *exec, t_cmd *cmd, char **tokenized);
 void	free_cmds(t_cmd *cmds);
 int		first_char_is_special(t_pipe_ctx *ctx, char **pending_infile,
 			char **pending_outfile);
-int		handle_dolar(t_pipe_ctx *ctx, t_exec exec);
+int		handle_dolar(t_pipe_ctx *ctx, t_exec *exec);
 int		expand_dollar_var(t_pipe_ctx *ctx);
 int		expand_dollar_next(t_pipe_ctx *ctx);
 void	handle_argument(t_cmd **current, t_pipe_ctx *ctx);
@@ -116,12 +116,12 @@ int		process_tokens(char *rl, t_exec *exec, char **envp);
 int		execute_commands(t_exec *exec, char **tokenized);
 void	wait_processes(t_exec *exec);
 void	cleanup_exec(t_exec *exec);
-int		is_last(int index, t_exec exec);
+int		is_last(int index, t_exec *exec);
 void	init_pipe(t_exec *exec);
-void	redirect_stdio(t_exec exec, t_cmd *cmd, int index);
-void	clean_child(int index, t_exec exec, t_cmd *cmd);
-void	clean_parent(int index, t_exec exec, t_cmd *cmd);
-void	exec_child(t_cmd *cmds, t_exec exec, int index);
+void	redirect_stdio(t_exec *exec, t_cmd *cmd, int index);
+void	clean_child(int index, t_exec *exec, t_cmd *cmd);
+void	clean_parent(int index, t_exec *exec, t_cmd *cmd);
+void	exec_child(t_cmd *cmds, t_exec *exec, int index);
 int		is_directory(t_cmd *cmd, t_exec *exec);
 void	prin_cmd_not_found(char *name);
 int		builtin_cd(t_cmd *cmd);
@@ -144,7 +144,7 @@ int		count_words(char *rl);
 void	skip_normal_token(char *rl, int *index);
 void	skip_special_token(char *rl, int *index);
 void	process_quote_token(char *rl, int *index, int *has_quotes);
-int		replace_exit_code(char **tokenized, int index, t_exec exec);
+int		replace_exit_code(char **tokenized, int index, t_exec *exec);
 int		handle_dollar_only(t_pipe_ctx *ctx);
 int		handle_dollar_var_case(t_pipe_ctx *ctx);
 void	shift_tokens_left(char **tok, int start, int shift);
@@ -154,10 +154,10 @@ int		handle_in_redirection(t_cmd **current, t_pipe_ctx *ctx);
 int		handle_out_redirection(t_cmd **current, t_pipe_ctx *ctx);
 int		leading_in(t_pipe_ctx *ctx, t_cmd **cmds, t_cmd **current);
 int		leading_out(t_pipe_ctx *ctx, t_cmd **cmds, t_cmd **current);
-int		handel_heredoc(t_cmd **current, t_pipe_ctx *ctx, t_exec exec);
-t_exec	create_heredoc_exec(t_exec exec, int has_quotes);
+int		handel_heredoc(t_cmd **current, t_pipe_ctx *ctx, t_exec *exec);
+t_exec	*create_heredoc_exec(t_exec *exec, int has_quotes);
 void	set_heredoc_fd(t_cmd *current, int fd, char *lim);
-int		build_heredoc(char *lim, t_exec exec, int has_quotes);
+int		build_heredoc(char *lim, t_exec *exec, int has_quotes);
 t_cmd	*new_cmd(int argc);
 
 #endif

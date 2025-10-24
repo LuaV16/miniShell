@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 18:16:49 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/23 18:24:04 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/24 12:08:59 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ int	process_tokens(char *rl, t_exec *exec, char **envp)
 	if (!tokenized)
 		return (0);
 	init_ctx(&ctx);
-	cmds = add_to_struct(tokenized, *exec, &ctx);
+	cmds = add_to_struct(tokenized, exec, &ctx);
 	init_exec_struct(cmds, exec, envp);
 	exec->cmds = cmds;
 	if (!cmds)

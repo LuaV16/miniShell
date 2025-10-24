@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/09 19:35:37 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/23 18:04:22 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/24 12:35:56 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,33 +56,42 @@ int	check_valid_identifier(char *s)
 void	new_env(t_exec *exec, char *entry, int *i)
 {
 	char	**newenv;
+	int		j;
+	int		count;
 
 	newenv = malloc(sizeof(char *) * (*i + 2));
 	if (!newenv)
 		return ;
-	*i = 0;
-	while (exec->envp && exec->envp[*i])
+	j = 0;
+	count = *i;
+	while (j < count)
 	{
-		newenv[*i] = ft_strdup(exec->envp[*i]);
-		(*i)++;
+		newenv[j] = exec -> envp[j];
+		j++;
 	}
-	newenv[(*i)++] = ft_strdup(entry);
-	newenv[*i] = NULL;
-	if (exec -> envp)
-		free_resources(exec->envp);
+	newenv[j] = ft_strdup(entry);
+	newenv[j + 1] = NULL;
+	free(exec -> envp);
 	exec->envp = newenv;
 }
 
 int	replace_env(t_exec *exec, char *entry, int name_len, int *i)
 {
+	char	*eq_in_entry;
+
 	*i = 0;
+	eq_in_entry = ft_strchr(entry, '=');
 	while (exec->envp && exec->envp[*i])
 	{
 		if (ft_strncmp(exec->envp[*i], entry, name_len) == 0
-			&& exec->envp[*i][name_len] == '=')
+			&& (exec->envp[*i][name_len] == '='
+			|| exec->envp[*i][name_len] == '\0'))
 		{
-			free(exec->envp[*i]);
-			exec->envp[*i] = ft_strdup(entry);
+			if (eq_in_entry)
+			{
+				free(exec->envp[*i]);
+				exec->envp[*i] = ft_strdup(entry);
+			}
 			return (1);
 		}
 		(*i)++;
@@ -100,14 +109,15 @@ void	add_or_replace_envp(t_exec *exec, char *entry)
 		return ;
 	eq = ft_strchr((char *)entry, '=');
 	if (eq != NULL)
-		name_len = (int)(eq - entry);
+		name_len = eq - entry;
 	else
 		name_len = ft_strlen(entry);
 	if (exec->envp)
 	{
 		if (replace_env(exec, entry, name_len, &i) == 1)
 			return ;
-		new_env(exec, entry, &i);
+		if (eq != NULL)
+			new_env(exec, entry, &i);
 		return ;
 	}
 	exec->envp = malloc(sizeof(char *) * 2);

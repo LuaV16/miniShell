@@ -6,17 +6,17 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 19:28:42 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/23 19:38:57 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/24 12:04:04 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../miniShell.h"
 
-int	handle_dolar(t_pipe_ctx *ctx, t_exec exec)
+int	handle_dolar(t_pipe_ctx *ctx, t_exec *exec)
 {
 	if (!ctx->tok[ctx->index])
 		return (0);
-	if (exec.quote_type[ctx->index] == 1)
+	if (exec->quote_type[ctx->index] == 1)
 		return (0);
 	if (ctx->tok[ctx->index][0] == '$' && ctx->tok[ctx->index][1] == '?')
 	{
@@ -31,11 +31,11 @@ int	handle_dolar(t_pipe_ctx *ctx, t_exec exec)
 	return (0);
 }
 
-int	replace_exit_code(char **tokenized, int index, t_exec exec)
+int	replace_exit_code(char **tokenized, int index, t_exec *exec)
 {
 	char	*exit_s;
 
-	exit_s = ft_itoa(exec.exit);
+	exit_s = ft_itoa(exec->exit);
 	if (!exit_s)
 		return (0);
 	free(tokenized[index]);
