@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 13:19:24 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/24 16:14:40 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/27 17:02:36 by lvargas-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,15 +46,11 @@ void	init_shell(t_exec *exec)
 void	bucle(t_exec *exec, char **envp)
 {
 	char	*rl;
-	char	*name;
-	char	*sufix;
 	char	*res;
 
-	name = getenv("USER");
-	sufix = ft_strdup("@minishell$> ");
 	while (1)
 	{
-		res = ft_strjoin(name, sufix);
+		res = ft_strjoin(getenv("USER"), "@minishell$> ");
 		rl = readline(res);
 		free(res);
 		if (handle_null_input(rl))
@@ -68,8 +64,9 @@ void	bucle(t_exec *exec, char **envp)
 			continue ;
 		}
 		free(rl);
+		if (exec->sticky_exit == 1)
+			break ;
 	}
-	free(sufix);
 }
 
 int	main(int argc, char *argv[], char **envp)
