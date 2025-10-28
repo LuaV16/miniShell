@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 19:26:54 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/24 12:37:53 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/28 12:31:43 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,6 @@ char	*expnad_heredoc_line(char *line, t_exec *exec, int has_quotes)
 	ctx_local.index = 0;
 	handle_dolar(&ctx_local, temp_exec);
 	expanded = ft_strdup(line_tokens[0]);
-	free(temp_exec->quote_type);
 	free_resources(line_tokens);
 	if (expanded)
 		return (expanded);

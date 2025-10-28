@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 19:28:42 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/28 09:34:51 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/28 12:19:28 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,13 @@ int	handle_dollar_only(t_pipe_ctx *ctx)
 
 	had_value = expand_dollar_next(ctx);
 	if (!had_value)
-		return (1);
+	{
+		free(ctx->tok[ctx->index]);
+		ctx->tok[ctx -> index] = ft_strdup("$");
+		if (!ctx->tok[ctx->index])
+			ctx->tok[ctx->index] = ft_strdup("");
+		return (0);
+	}
 	return (0);
 }
 
