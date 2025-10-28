@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 19:38:06 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/23 19:39:08 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/28 09:37:26 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,4 +41,30 @@ int	expand_dollar_next(t_pipe_ctx *ctx)
 	}
 	shift_tokens_left(ctx->tok, ctx->index, 2);
 	return (0);
+}
+
+char	*find_exec_env(t_exec *exec, const char *name)
+{
+	int		index;
+	char	*eq;
+	int		name_len;
+
+	if (!exec || !exec->envp || !name)
+		return (NULL);
+	name_len = ft_strlen(name);
+	index = 0;
+	while (exec -> envp[index])
+	{
+		if (ft_strncmp(exec->envp[index], name, name_len) == 0
+			&& (exec -> envp[index][name_len] == '='
+			|| exec -> envp[index][name_len] == '\0'))
+		{
+			eq = ft_strchr(exec -> envp[index], '=');
+			if (eq)
+				return (eq + 1);
+			return (NULL);
+		}
+		index++;
+	}
+	return (NULL);
 }

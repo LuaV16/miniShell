@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   miniShell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lvargas- <lvargas-@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 16:05:38 by lvargas-          #+#    #+#             */
-/*   Updated: 2025/10/27 16:47:54 by lvargas-         ###   ########.fr       */
+/*   Updated: 2025/10/28 09:35:31 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,7 +98,7 @@ void				free_cmds(t_cmd *cmds);
 int					first_char_is_special(t_pipe_ctx *ctx,
 						char **pending_infile, char **pending_outfile);
 int					handle_dolar(t_pipe_ctx *ctx, t_exec *exec);
-int					expand_dollar_var(t_pipe_ctx *ctx);
+int					expand_dollar_var(t_pipe_ctx *ctx, t_exec *exec);
 int					expand_dollar_next(t_pipe_ctx *ctx);
 void				handle_argument(t_cmd **current, t_pipe_ctx *ctx);
 int					is_space(char c);
@@ -149,7 +149,7 @@ void				process_quote_token(char *rl, int *index, int *has_quotes);
 int					replace_exit_code(char **tokenized, int index,
 						t_exec *exec);
 int					handle_dollar_only(t_pipe_ctx *ctx);
-int					handle_dollar_var_case(t_pipe_ctx *ctx);
+int					handle_dollar_var_case(t_pipe_ctx *ctx, t_exec *exec);
 void				shift_tokens_left(char **tok, int start, int shift);
 int					handle_pipe(t_cmd **cmds, t_cmd **current, t_cmd **prev,
 						t_pipe_ctx *ctx);
@@ -168,5 +168,6 @@ int					handle_double_out_redirection(t_cmd **current,
 int					leading_double_out(t_pipe_ctx *ctx, t_cmd **cmds,
 						t_cmd **cur);
 char				*get_var_name(char *var, char **eq);
+char				*find_exec_env(t_exec *exec, const char *name);
 
 #endif

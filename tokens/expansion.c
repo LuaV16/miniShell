@@ -6,7 +6,7 @@
 /*   By: aldiaz-u <aldiaz-u@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/23 19:28:42 by aldiaz-u          #+#    #+#             */
-/*   Updated: 2025/10/24 13:42:07 by aldiaz-u         ###   ########.fr       */
+/*   Updated: 2025/10/28 09:34:51 by aldiaz-u         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ int	handle_dolar(t_pipe_ctx *ctx, t_exec *exec)
 			"$", ft_strlen(ctx->tok[ctx->index])) == 0)
 		return (handle_dollar_only(ctx));
 	if (ctx->tok[ctx->index][0] == '$')
-		return (handle_dollar_var_case(ctx));
+		return (handle_dollar_var_case(ctx, exec));
 	return (0);
 }
 
@@ -43,7 +43,7 @@ int	replace_exit_code(char **tokenized, int index, t_exec *exec)
 	return (1);
 }
 
-int	expand_dollar_var(t_pipe_ctx *ctx)
+int	expand_dollar_var(t_pipe_ctx *ctx, t_exec *exec)
 {
 	char	*var;
 	char	*env;
@@ -54,7 +54,9 @@ int	expand_dollar_var(t_pipe_ctx *ctx)
 	if (!var)
 		return (0);
 	varname = get_var_name(var, &eq);
-	env = getenv(varname);
+	env = find_exec_env(exec, varname);
+	if (!env)
+		env = getenv(varname);
 	free(varname);
 	free(ctx->tok[ctx->index]);
 	if (env)
@@ -64,7 +66,7 @@ int	expand_dollar_var(t_pipe_ctx *ctx)
 	else
 		ctx->tok[ctx->index] = ft_strdup("");
 	free(var);
-	return (env != NULL);
+	return (1);
 }
 
 int	handle_dollar_only(t_pipe_ctx *ctx)
@@ -77,11 +79,11 @@ int	handle_dollar_only(t_pipe_ctx *ctx)
 	return (0);
 }
 
-int	handle_dollar_var_case(t_pipe_ctx *ctx)
+int	handle_dollar_var_case(t_pipe_ctx *ctx, t_exec *exec)
 {
 	int	had_value;
 
-	had_value = expand_dollar_var(ctx);
+	had_value = expand_dollar_var(ctx, exec);
 	if (!had_value)
 		return (1);
 	return (0);
